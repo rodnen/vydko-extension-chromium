@@ -1,0 +1,239 @@
+{
+  "extName": {
+    "message": "Видко",
+    "description": "Назва розширення"
+  },
+  "extDescription": {
+    "message": "Перевірка відключень світла за чергою",
+    "description": "Опис розширення"
+  },
+  "appDescription": { "message": "Моніторинг відключень" },
+  "refreshData": { "message": "Оновити дані" },
+  "openMenu": { "message": "Відкрити меню" },
+  "provider": { "message": "Постачальник" },
+  "theme": { "message": "Тема" },
+  "system": { "message": "Системна" },
+  "light": { "message": "Світла" },
+  "dark": { "message": "Темна" },
+  "outageNotifications": { "message": "Сповіщення про відключення" },
+  "notifications": { "message": "Сповіщення" },
+  "disabled": { "message": "Вимкнено" },
+  "enabled": { "message": "Увімкнено" },
+  "support": { "message": "Підтримати" },
+  "supportProject": { "message": "Підтримати проєкт" },
+  "aboutExtension": { "message": "Про розширення" },
+  "reportBug": { "message": "Повідомити про помилку" },
+  "today": { "message": "Сьогодні" },
+  "tomorrow": { "message": "Завтра" },
+  "queue": { "message": "Черга" },
+  "dso": { "message": "ОСР" },
+  "distributionSystemOperator": { "message": "Оператор системи розподілу" },
+  "loading": { "message": "Йде завантаження…" },
+  "createdBy": { "message": "created by" },
+  "selectLanguage": { "message": "Обрати мову" },
+  "all": { "message": "Усі" },
+  "notSelected": { "message": "Не обрано" },
+  "DnEM": { "message": "ДнЕМ" },
+  "CEK": { "message": "ЦЕК" },
+  "KEM": { "message": "КЕМ" },
+  "outages": { "message": "Відключення" },
+  "notApplicable": { "message": "Не застосовуються" },
+  "statusBadgeChoose": {
+    "message": "Оберіть ОСР, щоб перейти до вибору черги"
+  },
+  "statusBadgeWarning": { "message": "Очікуємо на більш актуальні дані" },
+  "statusBadgeDanger": { "message": "Екстрені відключення, графіки не діють" },
+  "statusBadgeInfo": { "message": "Очікуємо оновлення" },
+  "dialogAboutTitle": { "message": "Про розширення" },
+  "dialogAboutBrowser": { "message": "Розширення для браузера" },
+  "dialogAboutClearCache": { "message": "Очистити кеш" },
+  "dialogAboutInstallDate": { "message": "Дата встановлення" },
+  "dialogAboutExtensionId": { "message": "ID розширення" },
+  "dialogAboutPermissions": { "message": "Дозволи" },
+  "dialogAboutView": { "message": "Переглянути" },
+  "dialogAboutCheckUpdate": { "message": "Перевірити оновлення" },
+  "dialogPermissionsTitle": { "message": "Дозволи" },
+  "dialogPermissionsHostTitle": { "message": "Доступ до сайтів" },
+  "dialogPermissionsHostDescription": {
+    "message": "Розширення має доступ до цих сайтів."
+  },
+  "dialogPermissionsExtensionTitle": { "message": "Дозволи розширення" },
+  "dialogPermissionsExtensionDescription": {
+    "message": "Дозволи, необхідні для роботи розширення."
+  },
+  "dialogPermissionsAllowed": { "message": "Дозволено" },
+  "dialogPermissionsNoHosts": { "message": "Немає дозволів до сайтів" },
+  "dialogPermissionsNoSpecial": { "message": "Немає спеціальних дозволів" },
+  "dialogPermissionsDisclaimer": {
+    "message": "Розширення використовує лише дозволи, необхідні для його роботи."
+  },
+  "permissionCookies": { "message": "Доступ до Cookies" },
+  "permissionStorage": { "message": "Зберігання даних розширення" },
+  "permissionUnlimitedStorage": { "message": "Розширене зберігання даних" },
+  "permissionTabs": { "message": "Доступ до вкладок" },
+  "permissionActiveTab": { "message": "Доступ до активної вкладки" },
+  "permissionScripting": { "message": "Виконання скриптів на сторінках" },
+  "permissionNotifications": { "message": "Сповіщення" },
+  "permissionWebRequest": { "message": "Перегляд мережевих запитів" },
+  "permissionWebRequestBlocking": { "message": "Блокування мережевих запитів" },
+  "permissionContextMenus": { "message": "Контекстне меню" },
+  "permissionAlarms": { "message": "Таймери та заплановані дії" },
+  "permissionDownloads": { "message": "Завантаження файлів" },
+  "permissionClipboardRead": { "message": "Читання буфера обміну" },
+  "permissionClipboardWrite": { "message": "Запис у буфер обміну" },
+  "permissionIdentity": { "message": "Доступ до облікового запису" },
+  "dialogSupportTitle": { "message": "Підтримка" },
+  "dialogSupportThanks": { "message": "Дякую, що ти тут" },
+  "dialogSupportIntro": {
+    "message": "Якщо ти відкрив цю сторінку — значить, тобі небайдуже те, що я роблю. Я створюю та розвиваю це розширення, щоб воно залишалося зручним і корисним для тебе."
+  },
+  "dialogSupportAsk": {
+    "message": "Хочеш підтримати мою роботу фінансово або просто зробити мені приємне? Буду дуже вдячний за будь-яку підтримку. 💛"
+  },
+  "dialogCryptoTitleBTC": { "message": "Bitcoin" },
+  "dialogCryptoTitleETH": { "message": "Ethereum" },
+  "dialogCryptoTitleUSDT": { "message": "USDT" },
+  "dialogCryptoDetails": { "message": "Реквізити для оплати" },
+  "dialogCryptoInstructions": {
+    "message": "Відскануй QR-код або скопіюй адресу гаманця нижче, щоб надіслати підтримку."
+  },
+  "dialogCryptoDepositAddress": { "message": "Адреса депозиту" },
+  "dialogCryptoAddress": { "message": "Адреса" },
+  "dialogCryptoCopy": { "message": "Копіювати" },
+  "dialogCopySuccess": { "message": "Успішно скопійовано" },
+  "dialogCopyFailure": { "message": "Не вдалося скопіювати" },
+  "dialogCacheCleared": { "message": "Кеш очищено" },
+  "dialogTryAgain": { "message": "Спробуйте ще раз" },
+  "dialogCancel": { "message": "Скасувати" },
+  "dialogNext": { "message": "Далі" },
+  "dialogBack": { "message": "Назад" },
+  "dialogSend": { "message": "Надіслати" },
+  "dialogSave": { "message": "Зберегти" },
+  "dialogBugReportTitle": { "message": "Повідомити про помилку" },
+  "dialogBugProblemTitle": { "message": "Опис проблеми" },
+  "dialogBugProblemHint": {
+    "message": "Опишіть, що сталося та за яких умов виникла помилка."
+  },
+  "dialogBugProblemPlaceholder": {
+    "message": "Наприклад: не відкриваються налаштування при натисканні..."
+  },
+  "dialogBugProblemRequired": { "message": "Опишіть проблему" },
+  "dialogBugMin10": { "message": "Мінімум 10 символів" },
+  "dialogBugProblemTooLong": { "message": "Занадто довге повідомлення" },
+  "dialogBugStepsTitle": { "message": "Кроки для відтворення" },
+  "dialogBugStepsHint": {
+    "message": "Опишіть послідовність дій, після яких виникає проблема.\nЧим точніше описані кроки, тим легше відтворити помилку."
+  },
+  "dialogBugStepsPlaceholder": {
+    "message": "1. Відкрив сторінку X\n2. Натиснув кнопку Y\n3. З'явилась помилка..."
+  },
+  "dialogBugStepsRequired": { "message": "Опишіть кроки для відтворення" },
+  "dialogBugMin30": { "message": "Мінімум 30 символів" },
+  "dialogBugStepsTooLong": { "message": "Занадто довгий опис дій" },
+  "dialogBugCancelled": { "message": "Відправлення скасовано" },
+  "dialogBugSending": { "message": "Надсилання звіту..." },
+  "dialogBugSendError": { "message": "Помилка відправлення звіту" },
+  "dialogBugSent": { "message": "Звіт успішно відправлено! Дякуємо" },
+  "dialogTimerTitle": { "message": "Налаштування сповіщень" },
+  "dialogTimerRemindBefore": { "message": "Нагадати за" },
+  "dialogTimerUntilStart": { "message": "до початку" },
+  "dialogTimerInterval": { "message": "Інтервал" },
+  "dialogTimerBetweenNotifications": { "message": "між сповіщеннями" },
+  "dialogTimerMinutes": { "message": "хв" },
+  "dialogTimerNotifications": { "message": "Сповіщення" },
+  "dialogTimerNotificationsDescription": {
+    "message": "Отримуйте сповіщення про наближення запланованого відключення."
+  },
+  "dialogTimerTimeTitle": { "message": "Час сповіщень" },
+  "dialogTimerTimeDescription": {
+    "message": "Вкажіть, коли надсилати перше сповіщення та як часто повторювати його до початку відключення."
+  },
+  "dialogTimerNotificationCount": { "message": "сповіщень" },
+  "dialogTimerWillBeSent": { "message": "буде надіслано." },
+  "dialogTimerFirstPrefix": { "message": "Перше — за" },
+  "dialogTimerBeforeOutage": { "message": "до відключення" },
+  "dialogTimerNextPrefix": { "message": "наступні кожні" },
+  "dialogTimerIntegerRequired": { "message": "«{label}»: введіть ціле число" },
+  "dialogTimerValueRange": {
+    "message": "«{label}»: значення має бути від {min} до {max}"
+  },
+  "dialogTimerCancelled": { "message": "Зміни скасовано" },
+  "dialogTimerSaving": { "message": "Збереження..." },
+  "dialogTimerSaveError": { "message": "Помилка збереження налаштувань" },
+  "dialogTimerSaved": { "message": "Налаштування сповіщень збережено" },
+  "versionStateNewer": { "message": "Використовується новіша версія" },
+  "versionStateCurrent": { "message": "Використовується остання версія" },
+  "versionStateAvailable": { "message": "Знайдено оновлення: {version}" },
+  "versionStateUnknown": { "message": "Стан оновлення невідомий" },
+  "versionAvailableMessage": { "message": "Оновити " },
+  "versionRateLimit": {
+    "message": "Забагато запитів до GitHub. Спробуйте через {minutes} хв."
+  },
+  "versionCheckError": { "message": "Помилка при перевірці оновлень" },
+  "versionCheckErrorReason": {
+    "message": "Помилка: {reason}"
+  },
+  "updatedYesterdayAt": { "message": "Оновлено вчора о" },
+  "updatedAt": { "message": "Оновлено" },
+  "installDateUnknown": { "message": "Невизначена" },
+  "outageReason": { "message": "Причина: " },
+  "outageStart": { "message": "Початок: " },
+  "outageEnd": { "message": "Кінець: " },
+  "outageEndPrefix": { "message": "до" },
+  "outageUpdated": { "message": "Оновлено: " },
+  "outageGroupNotSpecified": { "message": "Групу відключень не вказано" },
+  "inputLoadingTitle": { "message": "Дані завантажуються" },
+  "inputUpdatingData": { "message": "Оновлення даних" },
+  "inputViewOutageStatus": { "message": "Переглянути стан електропостачання" },
+  "inputPowerUnavailable": { "message": "За адресою відсутня електроенергія" },
+  "inputPowerStatus": { "message": "Стан електропостачання" },
+  "inputClear": { "message": "Очистити" },
+  "inputExpand": { "message": "Розгорнути" },
+  "inputCollapse": { "message": "Згорнути" },
+  "inputCity": { "message": "Населений пункт" },
+  "inputStreet": { "message": "Вулиця" },
+  "inputHouseNumber": { "message": "Номер будинку" },
+  "noPowerBefore": {
+    "message": "Якщо зараз у вас відсутнє світло, імовірно виникла "
+  },
+  "noPowerEmphasis": { "message": "аварійна ситуація" },
+  "noPowerAfter": {
+    "message": ", або діють стабілізаційні чи екстрені відключення."
+  },
+  "checkAgainBefore": { "message": "Просимо перевірити інформацію через " },
+  "checkAgainEmphasis": { "message": "15 хвилин" },
+  "checkAgainAfter": { "message": " (час на оновлення даних)." },
+  "updated": { "message": "Оновлено" },
+  "notificationOutageSoonTitle": { "message": "Світло вимкнуть через $1 хв" },
+  "notificationOutageNowTitle": { "message": "Світло вимикають зараз" },
+  "notificationOutageTime": { "message": "Час відключення: $1" },
+  "updateGitHubUnavailable": { "message": "GitHub недоступний (HTTP $1)" },
+  "updateGitHubInvalidResponse": { "message": "Некоректна відповідь GitHub" },
+  "updateGitHubNoReleases": { "message": "Релізи не знайдено" },
+  "updateNotificationTitle": { "message": "Доступне оновлення" },
+  "updateNotificationMessage": {
+    "message": "Вийшла версія $1. Натисніть, щоб переглянути її."
+  },
+  "errorUnknown": { "message": "Невідома помилка" },
+  "messageRouterInvalidMessage": { "message": "Некоректне повідомлення" },
+  "apiYasnoHttpError": { "message": "Помилка Yasno API (HTTP $1: $2)" },
+  "apiDtekUnknownType": {
+    "message": "Невідомий тип DTEK API: \"$1\". Очікується \"dnem\" або \"kem\"."
+  },
+  "apiDtekPageLoadError": {
+    "message": "Не вдалося завантажити головну сторінку DTEK."
+  },
+  "apiDtekCsrfMissing": { "message": "Не знайдено CSRF-токен DTEK." },
+  "apiDtekHttpError": { "message": "Помилка DTEK API (HTTP $1): $2" },
+  "loadErrorTitle": { "message": "Не вдалося завантажити дані 😢" },
+  "loadErrorReason": { "message": "Причина:" },
+  "loadErrorOpenSite": { "message": "Відкрити сайт" },
+  "loadErrorConnectionHelp": {
+    "message": "Перевірте з'єднання або перезапустіть розширення."
+  },
+  "loadErrorCacheBefore": { "message": "Якщо помилка не зникає — спробуйте" },
+  "loadErrorClearCache": { "message": "очистити кеш" },
+  "loadErrorCacheAfter": { "message": "у розділі «Про розширення»." },
+  "lightOn": { "message": "Світло є" },
+  "lightOff": { "message": "Світла немає" }
+}

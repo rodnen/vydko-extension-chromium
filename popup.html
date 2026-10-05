@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="uk">
+
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/colors.css">
+</head>
+
+<body class="flex-col">
+  <header class="flex-col">
+    <div class="app-header p-8 flex-between">
+      <div class="brand g-075 flex-center">
+        <div class="btn app-btn brand-icon flex-center glass-panel">
+          <div class="app-icon"></div>
+        </div>
+        <div class="brand-name flex-col">
+            <div class="app-name flex">
+                <span data-i18n="extName" class="secondary-text"></span>
+            </div>
+            <div class="app-description flex">
+                <span data-i18n="appDescription" class="thirdly-text"></span>
+            </div>
+        </div>
+      </div>
+
+      <div class="app-header-btns g-8 flex-center">
+
+        <button class="btn app-btn g-6 flex-center glass-panel" data-action="refresh" data-i18n-title="refreshData">
+          <div class="icon ic_refresh"></div>
+        </button>
+
+        <div class="app-menu z-3 flex-center">
+          <button class="btn app-btn g-6 flex-center glass-panel" data-action="openMenu" data-i18n-title="openMenu">
+            <div class="icon ic_dots"></div>
+          </button>
+
+          <!-- Popup Menu -->
+          <div id="main-popup-menu" class="popup-menu z-999 glass-panel glass-blur">
+
+            <button class="menu-item g-075 t12_px" data-action="provider" data-i18n-title="provider">
+              <span class="icon ic_building"></span>
+              <div class="menu-content flex-between">
+                <span data-i18n="provider"></span>
+                <span></span>
+              </div>
+            </button>
+
+            <button class="menu-item g-075 t12_px" data-action="theme" data-i18n-title="theme">
+              <span class="icon ic_system"></span>
+              <div class="menu-content flex-between">
+                <span data-i18n="theme"></span>
+                <span data-i18n="system"></span>
+              </div>
+            </button>
+
+            <button class="menu-item g-075 t12_px close-at-click" data-i18n-title="outageNotifications" data-action="notification">
+              <span class="icon ic_bell_slash"></span>
+              <div class="menu-content flex-between">
+                <span data-i18n="notifications"></span>
+                <span data-i18n="disabled"></span>
+              </div>
+            </button>
+
+            <button class="menu-item g-075 close-at-click" data-action="support" data-i18n-title="support">
+              <span class="icon ic_coffee"></span>
+              <div class="menu-content flex-between">
+                <span data-i18n="supportProject"></span>
+              </div>
+            </button>
+
+            <div class="menu-separator"></div>
+
+            <div class="popup-combined flex-row">
+              <button class="menu-item g-075 close-at-click" data-action="about" data-i18n-title="aboutExtension">
+                <span class="icon ic_info"></span>
+                <div class="menu-content flex-between">
+                  <span data-i18n="aboutExtension"></span>
+                </div>
+              </button>
+              <button class="menu-item g-075 close-at-click danger flex-center" data-i18n-title="reportBug" data-action="bug-report">
+                <span class="icon ic_bug"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="app-controls g-15 p-8 flex-col" id="controls">
+
+      <div class="app-date-wrapper">
+        <div id="date-group" class="date-select glass-panel">
+          <div class="date-indicator"></div>
+
+          <button class="date-btn z-1 active" data-type="today" data-i18n-title="today"></button>
+          <button class="date-btn z-1" data-type="tomorrow" data-i18n-title="tomorrow"></button>
+        </div>
+      </div>
+
+      <div class="select-wrapper z-2 g-8 flex-between">
+
+        <div class="custom-select flex-center queue-select glass-panel" name="queue" data-i18n-title="queue" data-value="all">
+          <label for="queue" data-i18n="queue" class="select-label"></label>
+          <div class="select-trigger"></div>
+          <div class="select-options z-999 glass-panel glass-blur">
+          </div>
+        </div>
+
+        <div class="custom-select flex-center dso-select glass-panel" name="dsoId" data-region="none"
+          data-value="none" data-i18n-title="distributionSystemOperator">
+          <label for="dsoId" data-i18n="dso" class="select-label"></label>
+          <div class="select-trigger"></div>
+          <div class="select-options z-999 glass-panel glass-blur">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <div id="content-wrapper" class="flex-col">
+
+    <div id="content-box" class="loading flex-center flex-col g-8 p-8 ">
+      <div class="loading-wrapper g-10 flex-center flex-row">
+        <div class="loader"></div>
+        <p data-i18n="loading"></p>
+      </div>
+    </div>
+
+  </div>
+  <script type="module" src="popup.js"></script>
+
+  <footer class="app-footer flex-between p-8 g-10">
+    <div class="author">
+      <span data-i18n="createdBy"></span>
+      <a
+        href="https://github.com/rodnen"
+        target="_blank">
+        rodnen
+      </a>
+    </div>
+
+    <div class="app-menu z-3 flex-center">
+
+        <button class="btn app-btn g-6 flex-center glass-panel" data-action="openLanguage" data-i18n-title="selectLanguage">
+            <div class="icon ic_globe"></div>
+        </button>
+
+        <div id="language-popup-menu" class="popup-menu z-999 glass-panel glass-blur">
+
+            <button class="menu-item g-075" data-value="uk">
+                <span>Українська</span>
+            </button>
+
+            <div class="menu-separator"></div>
+
+            <button class="menu-item g-075" data-value="en">
+                <span>English</span>
+            </button>
+
+        </div>
+    </div>
+
+  </footer>
+
+  <div id="dialogWrapper" class="_dialog-wrapper z-4 flex-center glass-blur">
+    <div id="dialog" class="_dialog glass-panel glass-blur flex-col">
+      <div class="dialog-header p-8 flex-center">
+        <span class="dialog-title"></span>
+      </div>
+      <div class="dialog-content"></div>
+    </div>
+</body>
+
+</html>

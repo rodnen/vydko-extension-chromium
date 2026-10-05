@@ -1,0 +1,307 @@
+{
+  "extName": {
+    "message": "Vydko",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Power outage schedule checker",
+    "description": "Extension description"
+  },
+  "appDescription": {
+    "message": "Power outage monitoring"
+  },
+  "refreshData": {
+    "message": "Refresh data"
+  },
+  "openMenu": {
+    "message": "Open menu"
+  },
+  "provider": {
+    "message": "Provider"
+  },
+  "theme": {
+    "message": "Theme"
+  },
+  "system": {
+    "message": "System"
+  },
+  "light": {
+    "message": "Light"
+  },
+  "dark": {
+    "message": "Dark"
+  },
+  "outageNotifications": {
+    "message": "Outage notifications"
+  },
+  "notifications": {
+    "message": "Notifications"
+  },
+  "disabled": {
+    "message": "OFF"
+  },
+  "enabled": {
+    "message": "ON"
+  },
+  "support": {
+    "message": "Support"
+  },
+  "supportProject": {
+    "message": "Support the project"
+  },
+  "aboutExtension": {
+    "message": "About extension"
+  },
+  "reportBug": {
+    "message": "Report a bug"
+  },
+  "today": {
+    "message": "Today"
+  },
+  "tomorrow": {
+    "message": "Tomorrow"
+  },
+  "queue": {
+    "message": "Queue"
+  },
+  "dso": {
+    "message": "DSO"
+  },
+  "distributionSystemOperator": {
+    "message": "Distribution system operator"
+  },
+  "loading": {
+    "message": "Loading…"
+  },
+  "createdBy": {
+    "message": "created by"
+  },
+  "selectLanguage": {
+    "message": "Select language"
+  },
+  "all": {
+    "message": "All"
+  },
+  "notSelected": {
+    "message": "Not selected"
+  },
+  "DnEM": {
+    "message": "DnEM"
+  },
+  "CEK": {
+    "message": "CEK"
+  },
+  "KEM": {
+    "message": "KEM"
+  },
+  "outages": {
+    "message": "Outages"
+  },
+  "notApplicable": {
+    "message": "Not applicable"
+  },
+  "statusBadgeChoose": {
+    "message": "Select an DSO to proceed to the queue selection"
+  },
+  "statusBadgeWarning": {
+    "message": "Waiting for more up-to-date data"
+  },
+  "statusBadgeDanger": {
+    "message": "Emergency power outages, schedules are not in effect"
+  },
+  "statusBadgeInfo": {
+    "message": "Waiting for an update"
+  },
+  "dialogAboutTitle": { "message": "About extension" },
+  "dialogAboutBrowser": { "message": "Browser extension" },
+  "dialogAboutClearCache": { "message": "Clear cache" },
+  "dialogAboutInstallDate": { "message": "Install date" },
+  "dialogAboutExtensionId": { "message": "Extension ID" },
+  "dialogAboutPermissions": { "message": "Permissions" },
+  "dialogAboutView": { "message": "View" },
+  "dialogAboutCheckUpdate": { "message": "Check for updates" },
+  "dialogPermissionsTitle": { "message": "Permissions" },
+  "dialogPermissionsHostTitle": { "message": "Website access" },
+  "dialogPermissionsHostDescription": {
+    "message": "The extension can access these websites."
+  },
+  "dialogPermissionsExtensionTitle": { "message": "Extension permissions" },
+  "dialogPermissionsExtensionDescription": {
+    "message": "Permissions required for the extension to work."
+  },
+  "dialogPermissionsAllowed": { "message": "Allowed" },
+  "dialogPermissionsNoHosts": { "message": "No website permissions" },
+  "dialogPermissionsNoSpecial": { "message": "No special permissions" },
+  "dialogPermissionsDisclaimer": {
+    "message": "The extension only uses permissions required for its operation."
+  },
+  "permissionCookies": { "message": "Access to cookies" },
+  "permissionStorage": { "message": "Store extension data" },
+  "permissionUnlimitedStorage": { "message": "Extended data storage" },
+  "permissionTabs": { "message": "Access browser tabs" },
+  "permissionActiveTab": { "message": "Access the active tab" },
+  "permissionScripting": { "message": "Run scripts on websites" },
+  "permissionNotifications": { "message": "Notifications" },
+  "permissionWebRequest": { "message": "View network requests" },
+  "permissionWebRequestBlocking": { "message": "Block network requests" },
+  "permissionContextMenus": { "message": "Context menus" },
+  "permissionAlarms": { "message": "Timers and scheduled actions" },
+  "permissionDownloads": { "message": "Download files" },
+  "permissionClipboardRead": { "message": "Read clipboard" },
+  "permissionClipboardWrite": { "message": "Write to clipboard" },
+  "permissionIdentity": { "message": "Access account information" },
+  "dialogSupportTitle": { "message": "Support" },
+  "dialogSupportThanks": { "message": "Thank you for being here" },
+  "dialogSupportIntro": {
+    "message": "If you opened this page, you care about what I do. I build and improve this extension to keep it useful and easy to use."
+  },
+  "dialogSupportAsk": {
+    "message": "Would you like to support my work or simply make my day? I would appreciate any support. 💛"
+  },
+  "dialogCryptoTitleBTC": { "message": "Bitcoin" },
+  "dialogCryptoTitleETH": { "message": "Ethereum" },
+  "dialogCryptoTitleUSDT": { "message": "USDT" },
+  "dialogCryptoDetails": { "message": "Payment details" },
+  "dialogCryptoInstructions": {
+    "message": "Scan the QR code or copy the wallet address below to send support."
+  },
+  "dialogCryptoDepositAddress": { "message": "Deposit address" },
+  "dialogCryptoAddress": { "message": "Address" },
+  "dialogCryptoCopy": { "message": "Copy" },
+  "dialogCopySuccess": { "message": "Copied successfully" },
+  "dialogCopyFailure": { "message": "Could not copy" },
+  "dialogCacheCleared": { "message": "Cache cleared" },
+  "dialogTryAgain": { "message": "Please try again" },
+  "dialogCancel": { "message": "Cancel" },
+  "dialogNext": { "message": "Next" },
+  "dialogBack": { "message": "Back" },
+  "dialogSend": { "message": "Send" },
+  "dialogSave": { "message": "Save" },
+  "dialogBugReportTitle": { "message": "Report a problem" },
+  "dialogBugProblemTitle": { "message": "Problem description" },
+  "dialogBugProblemHint": {
+    "message": "Describe what happened and under which conditions the problem occurred."
+  },
+  "dialogBugProblemPlaceholder": {
+    "message": "For example: settings do not open when I click..."
+  },
+  "dialogBugProblemRequired": { "message": "Describe the problem" },
+  "dialogBugMin10": { "message": "At least 10 characters" },
+  "dialogBugProblemTooLong": { "message": "The message is too long" },
+  "dialogBugStepsTitle": { "message": "Steps to reproduce" },
+  "dialogBugStepsHint": {
+    "message": "Describe the steps that lead to the problem.\nThe more precise the steps, the easier it is to reproduce."
+  },
+  "dialogBugStepsPlaceholder": {
+    "message": "1. Opened page X\n2. Clicked button Y\n3. An error appeared..."
+  },
+  "dialogBugStepsRequired": { "message": "Describe the steps to reproduce" },
+  "dialogBugMin30": { "message": "At least 30 characters" },
+  "dialogBugStepsTooLong": { "message": "The description is too long" },
+  "dialogBugCancelled": { "message": "Report submission cancelled" },
+  "dialogBugSending": { "message": "Sending report..." },
+  "dialogBugSendError": { "message": "Failed to send the report" },
+  "dialogBugSent": { "message": "Report sent successfully. Thank you!" },
+  "dialogTimerTitle": { "message": "Notification settings" },
+  "dialogTimerRemindBefore": { "message": "Remind me" },
+  "dialogTimerUntilStart": { "message": "before start" },
+  "dialogTimerInterval": { "message": "Interval" },
+  "dialogTimerBetweenNotifications": { "message": "between notifications" },
+  "dialogTimerMinutes": { "message": "min" },
+  "dialogTimerNotifications": { "message": "Notifications" },
+  "dialogTimerNotificationsDescription": {
+    "message": "Get notified as a planned outage approaches."
+  },
+  "dialogTimerTimeTitle": { "message": "Notification timing" },
+  "dialogTimerTimeDescription": {
+    "message": "Choose when to send the first notification and how often to repeat it before the outage."
+  },
+  "dialogTimerNotificationCount": { "message": "notifications" },
+  "dialogTimerWillBeSent": { "message": "will be sent." },
+  "dialogTimerFirstPrefix": { "message": "First" },
+  "dialogTimerBeforeOutage": { "message": "before the outage" },
+  "dialogTimerNextPrefix": { "message": "then every" },
+  "dialogTimerIntegerRequired": { "message": "{label}: enter a whole number" },
+  "dialogTimerValueRange": {
+    "message": "{label}: value must be between {min} and {max}"
+  },
+  "dialogTimerCancelled": { "message": "Changes cancelled" },
+  "dialogTimerSaving": { "message": "Saving..." },
+  "dialogTimerSaveError": { "message": "Failed to save settings" },
+  "dialogTimerSaved": { "message": "Notification settings saved" },
+  "versionStateNewer": { "message": "A newer version is installed" },
+  "versionStateCurrent": { "message": "The latest version is installed" },
+  "versionStateAvailable": { "message": "Update found: {version}" },
+  "versionStateUnknown": { "message": "Update status is unknown" },
+  "versionAvailableMessage": { "message": "Update " },
+  "versionRateLimit": {
+    "message": "Too many GitHub requests. Try again in {minutes} min."
+  },
+  "versionCheckError": { "message": "Could not check for updates" },
+  "versionCheckErrorReason": { "message": "Failed: {reason}" },
+  "updatedAt": { "message": "Updated at" },
+  "updatedYesterdayAt": { "message": "Updated yesterday at" },
+  "installDateUnknown": { "message": "Unknown" },
+  "outageReason": { "message": "Reason: " },
+  "outageStart": { "message": "Start: " },
+  "outageEnd": { "message": "End: " },
+  "outageEndPrefix": { "message": "until" },
+  "outageUpdated": { "message": "Updated: " },
+  "outageGroupNotSpecified": { "message": "Outage group not specified" },
+  "inputLoadingTitle": { "message": "Loading data" },
+  "inputUpdatingData": { "message": "Updating data" },
+  "inputViewOutageStatus": { "message": "View power supply status" },
+  "inputPowerUnavailable": {
+    "message": "There is no electricity at this address"
+  },
+  "inputPowerStatus": { "message": "Power supply status" },
+  "inputClear": { "message": "Clear" },
+  "inputExpand": { "message": "Expand" },
+  "inputCollapse": { "message": "Collapse" },
+  "inputCity": { "message": "Settlement" },
+  "inputStreet": { "message": "Street" },
+  "inputHouseNumber": { "message": "House number" },
+  "noPowerBefore": { "message": "If you currently have no power, an " },
+  "noPowerEmphasis": { "message": "emergency situation" },
+  "noPowerAfter": {
+    "message": " may have occurred, or scheduled or emergency outages may be in effect."
+  },
+  "checkAgainBefore": { "message": "Please check the information again in " },
+  "checkAgainEmphasis": { "message": "15 minutes" },
+  "checkAgainAfter": { "message": " (data update time)." },
+  "updated": { "message": "Updated" },
+  "notificationOutageSoonTitle": {
+    "message": "Power will be turned off in $1 min"
+  },
+  "notificationOutageNowTitle": { "message": "Power is being turned off now" },
+  "notificationOutageTime": { "message": "Outage time: $1" },
+  "updateGitHubUnavailable": { "message": "GitHub is unavailable (HTTP $1)" },
+  "updateGitHubInvalidResponse": { "message": "Invalid response from GitHub" },
+  "updateGitHubNoReleases": { "message": "No releases found" },
+  "updateNotificationTitle": { "message": "Update available" },
+  "updateNotificationMessage": {
+    "message": "Version $1 is available. Click to view it."
+  },
+  "errorUnknown": { "message": "Unknown error" },
+  "messageRouterInvalidMessage": { "message": "Invalid message" },
+  "apiYasnoHttpError": { "message": "Yasno API error (HTTP $1: $2)" },
+  "apiDtekUnknownType": {
+    "message": "Unknown DTEK API type: \"$1\". Expected \"dnem\" or \"kem\"."
+  },
+  "apiDtekPageLoadError": {
+    "message": "Could not load the DTEK home page."
+  },
+  "apiDtekCsrfMissing": { "message": "Could not find the DTEK CSRF token." },
+  "apiDtekHttpError": { "message": "DTEK API error (HTTP $1): $2" },
+  "loadErrorTitle": { "message": "Could not load data 😢" },
+  "loadErrorReason": { "message": "Reason:" },
+  "loadErrorOpenSite": { "message": "Open website" },
+  "loadErrorConnectionHelp": {
+    "message": "Check your connection or restart the extension."
+  },
+  "loadErrorCacheBefore": { "message": "If the error persists, try" },
+  "loadErrorClearCache": { "message": "clearing the cache" },
+  "loadErrorCacheAfter": { "message": "in the “About extension” section." },
+  "lightOn": { "message": "Light is on" },
+  "lightOff": { "message": "Light is off" }
+}
