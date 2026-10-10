@@ -26,7 +26,6 @@ const DSOID_OPTIONS = Object.freeze({
 
 export const CONSTANTS = {
   APP_VERSION: chrome.runtime.getManifest().version,
-  APP_NAME: 'Видко',
 
   //GIT HUB
   RATE_LIMIT_UNTIL_KEY: 'rateLimitUntil',

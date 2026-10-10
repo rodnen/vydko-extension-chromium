@@ -1,6 +1,7 @@
 import { CONSTANTS } from '../config/constants.js';
 import { Utils } from '../utils/utils.js';
 import { BoxView } from '../view/boxView.js';
+import { MessageManager } from './messageManager.js';
 
 // ============================================================================
 // МЕНЕДЖЕР ОНОВЛЕННЯ
@@ -9,20 +10,14 @@ import { BoxView } from '../view/boxView.js';
 export class RefreshManager {
   #isRefreshing = false;
   #box;
-  #messageManager;
 
-  constructor(dom, cacheManager, messageManager, i18n, onRefresh) {
+  constructor(dom, cacheManager, i18n, onRefresh) {
     this.dom = dom;
     this.cache = cacheManager;
-    this.#messageManager = messageManager;
     this.onRefresh = onRefresh;
     this.i18n = i18n;
     this.#box = new BoxView(dom, i18n);
     this.init();
-  }
-
-  #toast(text, type, icon, duration = 3000, emotional = false) {
-    return this.#messageManager?.showToast({ text, type, icon, duration, emotional });
   }
 
   init() {
@@ -53,9 +48,21 @@ export class RefreshManager {
       await this.onRefresh();
     } catch (error) {
       console.error('[RefreshManager] refresh error:', error);
-      this.#box.showError();
+
+      MessageManager.toast({
+        text: error.message,
+        type: 'error',
+        icon: 'ic_error'
+      });
+
+      this.#box.showError(error);
     } finally {
-      this.#toast(this.i18n.get('updated'), 'info', 'ic_info', 2000);
+
+      MessageManager.toast({
+        text: this.i18n.get('updated'),
+        type: 'info',
+        icon: 'ic_info'
+      });
 
       const remaining = CONSTANTS.REFRESH_MIN_DURATION - (Date.now() - startTime);
       if (remaining > 0) await Utils.delay(remaining);

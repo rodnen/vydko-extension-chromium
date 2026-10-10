@@ -1,10 +1,10 @@
 import { CONSTANTS } from '../config/constants.js';
 import { Utils } from '../utils/utils.js';
-// ============================================================================
-// МЕНЕДЖЕР ТЕМИ
-// ============================================================================
+import { SwapText } from '../utils/swapText.js';
+
 export class ThemeView {
   themes = ['system', 'dark', 'light'];
+  #swap = null;
 
   constructor(dom, i18n) {
     this.dom = dom;
@@ -13,7 +13,7 @@ export class ThemeView {
 
   async init() {
     const { theme } = await Utils.getStorageData(['theme']);
-    this.applyTheme(theme || this.themes[0]);
+    this.applyTheme(theme || this.themes[0], false);
   }
 
   async toggleTheme() {
@@ -21,7 +21,7 @@ export class ThemeView {
     const current = theme || this.themes[0];
     const next = this.getNextTheme(current);
     await Utils.setStorageData({ theme: next });
-    this.applyTheme(next);
+    this.applyTheme(next, true);
 
     return next;
   }
@@ -31,34 +31,36 @@ export class ThemeView {
     return this.themes[(index + 1) % this.themes.length];
   }
 
-  applyTheme(theme) {
+  applyTheme(theme, animate = false) {
     const root = document.documentElement;
     if (theme === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', theme);
-    this.#updateButtonUI(theme);
+    this.#updateButtonUI(theme, animate);
   }
 
-  #updateButtonUI(theme) {
+  refreshLabels() {
+    this.#swap?.refresh();
+  }
+
+  #updateButtonUI(theme, animate) {
     if (!this.dom.themeBtn) return;
 
     const icon = this.dom.themeBtn.querySelector('.icon');
-    const text = this.dom.themeBtn.querySelector('span:last-child');
+    const text = this.dom.themeBtn.querySelector('[data-direction]');
 
-    const map = {
-      system: { icon: 'ic_system', local: 'system', text: this.i18n.get('system') },
-      dark: { icon: 'ic_moon', local: 'dark', text: this.i18n.get('dark') },
-      light: { icon: 'ic_sun', local: 'light', text: this.i18n.get('light') }
-    };
+    const icons = { system: 'ic_system', dark: 'ic_moon', light: 'ic_sun' };
 
     if (icon) {
-      const allIconClasses = Object.values(map).map(item => item.icon);
-      icon.classList.remove(...allIconClasses);
-      icon.classList.add(map[theme].icon);
+      icon.classList.remove(...Object.values(icons));
+      icon.classList.add(icons[theme]);
     }
 
     if (text) {
-      text.dataset.i18n = map[theme].local;
-      text.textContent = map[theme].text;
+      this.#swap ??= new SwapText(text, {
+        label: key => this.i18n.get(key),
+        localized: true
+      });
+      this.#swap.set(theme, { animate });
     }
   }
 }

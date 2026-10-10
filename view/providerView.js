@@ -1,9 +1,12 @@
 import { CONSTANTS } from '../config/constants.js';
 import { Utils } from '../utils/utils.js';
+import { SwapText } from '../utils/swapText.js';
+
 // ============================================================================
-// МЕНЕДЖЕР ТЕМИ
+// МЕНЕДЖЕР ПРОВАЙДЕРА
 // ============================================================================
 export class ProviderView {
+  #swap = null;
 
   constructor(dom) {
     this.dom = dom;
@@ -11,16 +14,14 @@ export class ProviderView {
 
   async init() {
     const provider = await Utils.getProvider();
-    this.applyProvider(provider);
+    this.applyProvider(provider, false);
   }
 
   async toggleProvider() {
-    const provider = await Utils.getProvider();
-    const current = provider;
-
+    const current = await Utils.getProvider();
     const next = this.getNextProvider(current);
     await Utils.setProvider(next);
-    this.applyProvider(next);
+    this.applyProvider(next, true);
     return next;
   }
 
@@ -30,17 +31,19 @@ export class ProviderView {
     return CONSTANTS.PROVIDERS[(safeIndex + 1) % CONSTANTS.PROVIDERS.length];
   }
 
-  applyProvider(provider) {
-    this.#updateButtonUI(provider);
+  applyProvider(provider, animate = false) {
+    this.#updateButtonUI(provider, animate);
   }
 
-  #updateButtonUI(provider) {
+  #updateButtonUI(provider, animate) {
     if (!this.dom.providerBtn) return;
 
-    const text = this.dom.providerBtn.querySelector('span:last-child');
+    const text = this.dom.providerBtn.querySelector('[data-direction]');
+    if (!text) return;
 
-    if (text) {
-      text.textContent = CONSTANTS.PROVIDER_LABELS[provider] ?? '';
-    }
+    this.#swap ??= new SwapText(text, {
+      label: key => CONSTANTS.PROVIDER_LABELS[key] ?? ''
+    });
+    this.#swap.set(provider, { animate });
   }
 }

@@ -1,11 +1,11 @@
 import { CONSTANTS } from '../config/constants.js';
 import { Utils } from '../utils/utils.js';
 import { getUpdateStateMeta } from '../utils/updateState.js';
+import { MessageManager } from './messageManager.js';
 
 export class VersionManager {
-  constructor(dialogManager, messageManager, i18n) {
+  constructor(dialogManager, i18n) {
     this.dialogManager = dialogManager;
-    this.messageManager = messageManager;
     this.i18n = i18n;
 
     this.init();
@@ -47,7 +47,7 @@ export class VersionManager {
   #showUpdateMessage(latestVer, pendingUpdateUrl) {
     if (!latestVer || !pendingUpdateUrl) return;
 
-    this.messageManager?.showUpdateStatus({
+    MessageManager.showUpdateStatus({
       id: 'update',
       type: 'update',
       icon: 'ic_arrows_reload',
@@ -98,12 +98,14 @@ export class VersionManager {
     if (cooldownLeft > 0) {
       if (showResult) {
         const mins = Math.ceil(cooldownLeft / 60000);
+        const text = this.#t('versionRateLimit', { minutes: mins });
 
         this.dialogManager.updateVersionState({
           css: 'state-warning',
           icon: 'ic_warning',
-          text: this.#t('versionRateLimit', { minutes: mins })
+          text
         });
+        MessageManager.toast({ text, type: 'warning', icon: 'ic_warning' });
       }
 
       return;
@@ -121,12 +123,21 @@ export class VersionManager {
       console.error('Update check request failed:', error);
 
       if (showResult) {
+        const text = this.#t('versionCheckErrorReason', {
+          reason: error.message || this.i18n.get('dialogTryAgain')
+        });
+
         this.dialogManager.updateVersionState({
           css: 'state-error',
           icon: 'ic_error',
-          text: this.#t('versionCheckErrorReason', {
-            reason: error.message || this.i18n.get('dialogTryAgain')
-          })
+          text
+        });
+        MessageManager.toast({
+          text,
+          type: 'error',
+          icon: 'ic_error',
+          duration: 5000,
+          emotional: true
         });
       }
 
@@ -139,10 +150,19 @@ export class VersionManager {
       console.error('Update check error: empty response');
 
       if (showResult) {
+        const text = this.i18n.get('versionCheckError');
+
         this.dialogManager.updateVersionState({
           css: 'state-error',
           icon: 'ic_error',
-          text: this.i18n.get('versionCheckError')
+          text
+        });
+        MessageManager.toast({
+          text,
+          type: 'error',
+          icon: 'ic_error',
+          duration: 5000,
+          emotional: true
         });
       }
 
@@ -162,12 +182,14 @@ export class VersionManager {
         const mins = Math.ceil(
           Math.max(0, resetAt - Date.now()) / 60000
         );
+        const text = this.#t('versionRateLimit', { minutes: mins });
 
         this.dialogManager.updateVersionState({
           css: 'state-warning',
           icon: 'ic_warning',
-          text: this.#t('versionRateLimit', { minutes: mins })
+          text
         });
+        MessageManager.toast({ text, type: 'warning', icon: 'ic_warning' });
       }
 
       return;
@@ -177,12 +199,21 @@ export class VersionManager {
       console.error('Update check error:', result);
 
       if (showResult) {
+        const text = this.#t('versionCheckErrorReason', {
+          reason: result.error || this.i18n.get('dialogTryAgain')
+        });
+
         this.dialogManager.updateVersionState({
           css: 'state-error',
           icon: 'ic_error',
-          text: this.#t('versionCheckErrorReason', {
-            reason: result.error || this.i18n.get('dialogTryAgain')
-          })
+          text
+        });
+        MessageManager.toast({
+          text,
+          type: 'error',
+          icon: 'ic_error',
+          duration: 5000,
+          emotional: true
         });
       }
 
@@ -207,6 +238,12 @@ export class VersionManager {
     if (showResult) {
       const meta = getUpdateStateMeta(cmp, latestVer, this.i18n);
       this.dialogManager.updateVersionState(meta);
+
+      MessageManager.toast({
+        text: meta.text,
+        icon: meta.icon,
+        type: 'info'
+      });
     }
   }
 }

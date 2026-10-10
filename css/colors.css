@@ -58,6 +58,8 @@
     --toast-info-text: rgb(4, 30, 73);
     --toast-success: rgb(221, 253, 212);
     --toast-success-text: rgb(26, 73, 4);
+    --toast-warning: rgb(253, 250, 212);
+    --toast-warning-text: rgb(73, 72, 4);
     --toast-error: rgb(253, 211, 211);
     --toast-error-text: rgb(73, 4, 4);
 
@@ -91,36 +93,9 @@
     --danger-glow:
         0 0 20px rgba(255, 10, 10, 0.4), 0 0 50px rgba(255, 10, 10, 0.15);
 
-    /* ---------- Grid heatmap (g-РЯД-КОЛОНКА) ----------*/
-    --g-1-1: var(--bg-lighter);
-    --g-1-1-out: var(--outage);
-    --g-1-2: var(--bg-lighterer);
-    --g-1-2-out: var(--outage2);
-
-    --g-2-1: var(--bg-lighter);
-    --g-2-1-out: var(--outage);
-    --g-2-2: var(--bg-lighterer);
-    --g-2-2-out: var(--outage2);
-
-    --g-3-1: var(--bg-lighter);
-    --g-3-1-out: var(--outage);
-    --g-3-2: var(--bg-lighterer);
-    --g-3-2-out: var(--outage2);
-
-    --g-4-1: var(--bg-lighter);
-    --g-4-1-out: var(--outage);
-    --g-4-2: var(--bg-lighterer);
-    --g-4-2-out: var(--outage2);
-
-    --g-5-1: var(--bg-lighter);
-    --g-5-1-out: var(--outage);
-    --g-5-2: var(--bg-lighterer);
-    --g-5-2-out: var(--outage2);
-
-    --g-6-1: var(--bg-lighter);
-    --g-6-1-out: var(--outage);
-    --g-6-2: var(--bg-lighterer);
-    --g-6-2-out: var(--outage2);
+    /* ---------- Group ----------*/
+    --group-bg: var(--bg-lighter);
+    --group-outage-bg: var(--outage);
 }
 
 /* ==================================================================
@@ -135,7 +110,7 @@
 
         --control-bg: rgb(52, 52, 52);
         --dialog-bg: rgb(30, 30, 30);
-        --scene-bg: rgb(42, 42, 42);
+        --scene-bg: rgb(36, 36, 36);
         --slider-bg: rgb(111, 111, 111);
 
         --glass-border: rgba(255, 255, 255, 0.12);
@@ -163,6 +138,8 @@
         --toast-info-text: rgb(178, 226, 254);
         --toast-success: rgb(26, 119, 0);
         --toast-success-text: rgb(191, 254, 178);
+        --toast-warning: rgb(119, 103, 0);
+        --toast-warning-text: rgb(254, 251, 178);
         --toast-error: rgb(119, 0, 0);
         --toast-error-text: rgb(254, 178, 178);
 
@@ -200,7 +177,7 @@
 
     --control-bg: rgb(52, 52, 52);
     --dialog-bg: rgb(30, 30, 30);
-    --scene-bg: rgb(42, 42, 42);
+    --scene-bg: rgb(36, 36, 36);
     --slider-bg: rgb(111, 111, 111);
 
     --glass-border: rgba(255, 255, 255, 0.12);
@@ -228,6 +205,8 @@
     --toast-info-text: rgb(178, 226, 254);
     --toast-success: rgb(26, 119, 0);
     --toast-success-text: rgb(191, 254, 178);
+    --toast-warning: rgb(119, 103, 0);
+    --toast-warning-text: rgb(254, 251, 178);
     --toast-error: rgb(119, 0, 0);
     --toast-error-text: rgb(254, 178, 178);
 
@@ -293,6 +272,8 @@
     --toast-info-text: rgb(4, 30, 73);
     --toast-success: rgb(221, 253, 212);
     --toast-success-text: rgb(26, 73, 4);
+    --toast-warning: rgb(253, 250, 212);
+    --toast-warning-text: rgb(73, 72, 4);
     --toast-error: rgb(253, 211, 211);
     --toast-error-text: rgb(73, 4, 4);
 

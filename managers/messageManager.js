@@ -1,31 +1,34 @@
 // ============================================================================
-// МЕНЕДЖЕР ПОВІДОМЛЕНЬ
+// МЕНЕДЖЕР ПОВІДОМЛЕНЬ (статичний)
 // ============================================================================
 export class MessageManager {
   // --------------------------------------------------------------------------
   // Поля
   // --------------------------------------------------------------------------
-  #maxToastCount = 5;
-  #defaultDuration = 3000;
-  #activeToasts = new Map();
+  static #maxToastCount = 5;
+  static #defaultDuration = 3000;
+  static #activeToasts = new Map();
 
-  #elements = {
+  static #elements = {
     header: null,
     container: null
   };
 
   // --------------------------------------------------------------------------
-  // Ініціалізація
+  // Конфігурація (необов'язкова)
   // --------------------------------------------------------------------------
-  constructor(dom = {}) {
-    this.#elements.header = dom.header || document.querySelector('header');
-    this.#initContainer();
+  /**
+   * Викликати лише якщо хедер не є першим <header> на сторінці.
+   * MessageManager.configure({ header: document.querySelector('#my-header') });
+   */
+  static configure({ header } = {}) {
+    if (header) MessageManager.#elements.header = header;
   }
 
   // ==========================================================================
   // PUBLIC API — статус у хедері
   // ==========================================================================
-  showUpdateStatus({
+  static showUpdateStatus({
     text = '',
     textParts = null,
     icon = 'ic_info',
@@ -33,135 +36,171 @@ export class MessageManager {
     type = 'info',
     id = 'update-status'
   } = {}) {
-    if (!this.#elements.header) return null;
+    const header = MessageManager.#getHeader();
+    if (!header) return null;
 
-    const host = this.#elements.header.querySelector('.app-name') ?? this.#elements.header;
+    const host = MessageManager.#getStatusHost();
     host.classList.add('flex-center', 'g-5');
-    let block = this.#findStatusBlock(id);
+    let block = MessageManager.#findStatusBlock(id);
 
     if (block) {
-      this.#updateStatusBlock(block, { id, text, textParts, icon, url, type });
-      this.#revealStatusBlock(block);
+      MessageManager.#updateStatusBlock(block, { id, text, textParts, icon, url, type });
+      MessageManager.#revealStatusBlock(block);
       return block;
     }
 
-    block = this.#createStatusBlock({ text, textParts, icon, url, type, id, closable: false });
+    block = MessageManager.#createStatusBlock({ text, textParts, icon, url, type, id, closable: false });
     host.append(block);
-    requestAnimationFrame(() => this.#revealStatusBlock(block));
+    requestAnimationFrame(() => MessageManager.#revealStatusBlock(block));
     return block;
   }
 
-  hideStatus(block) {
+  static hideStatus(block) {
     if (!block) return;
 
     block.style.opacity = '0';
     block.style.transform = 'translateY(-10px)';
 
     block.addEventListener('transitionend', () => {
-      block.remove()
-      const host = this.#elements.header.querySelector('.app-name') ?? this.#elements.header;
-      host.classList.remove('flex-center', 'g-5');
+      block.remove();
+      const host = MessageManager.#getStatusHost();
+      // Прибираємо класи лише коли в хості не залишилось інших статусів
+      if (host && !host.querySelector('.message-block')) {
+        host.classList.remove('flex-center', 'g-5');
+      }
     }, { once: true });
   }
 
-  clearStatuses() {
-    if (!this.#elements.header) return;
-    this.#elements.header
+  static clearStatuses() {
+    const header = MessageManager.#getHeader();
+    if (!header) return;
+    header
       .querySelectorAll('.message-block')
-      .forEach(block => this.hideStatus(block));
+      .forEach(block => MessageManager.hideStatus(block));
   }
 
   // ==========================================================================
   // PUBLIC API — toast
   // ==========================================================================
-  showToast({
+  static toast({
     text = '',
     icon = 'ic_info',
     type = 'info',
     id = null,
-    duration = this.#defaultDuration,
+    duration = MessageManager.#defaultDuration,
     emotional = false
   } = {}) {
-    if (this.#activeToasts.size >= this.#maxToastCount) {
-      const oldestId = this.#activeToasts.keys().next().value;
-      this.hideToast(oldestId);
+    const container = MessageManager.#getContainer();
+
+    if (id && MessageManager.#activeToasts.has(id)) {
+      MessageManager.#updateToast(id, { text, icon, type, emotional });
+      return id;
+    }
+
+    if (MessageManager.#activeToasts.size >= MessageManager.#maxToastCount) {
+      const oldestId = MessageManager.#activeToasts.keys().next().value;
+      MessageManager.hideToast(oldestId);
     }
 
     const toastId = id ?? `toast-${Date.now()}-${Math.random()}`;
 
-    if (id && this.#activeToasts.has(id)) {
-      this.#updateToast(id, { text, icon, type, emotional });
-      return toastId;
-    }
-
-    const messageText = emotional && this.#activeToasts.size >= 1
-      ? this.#addEmotionalEnding(text)
+    const messageText = emotional && MessageManager.#activeToasts.size >= 1
+      ? MessageManager.#addEmotionalEnding(text)
       : text;
 
-    const toast = this.#createToastElement({
+    const toast = MessageManager.#createToastElement({
       text: messageText,
       icon,
       type,
       id: toastId
     });
 
-    this.#elements.container.appendChild(toast);
+    container.appendChild(toast);
 
-    const timerId = setTimeout(() => this.hideToast(toastId), duration);
-    this.#activeToasts.set(toastId, { element: toast, timerId });
+    // duration: Infinity — тост не зникає сам, закрити можна лише через hideToast(id)
+    const timerId = Number.isFinite(duration)
+      ? setTimeout(() => MessageManager.hideToast(toastId), duration)
+      : null;
+
+    MessageManager.#activeToasts.set(toastId, { element: toast, timerId });
 
     requestAnimationFrame(() => toast.classList.add('show'));
 
     return toastId;
   }
 
-  hideToast(id) {
-    const toastData = this.#activeToasts.get(id);
+  static hideToast(id) {
+    const toastData = MessageManager.#activeToasts.get(id);
     if (!toastData) return;
 
     const { element, timerId } = toastData;
-    clearTimeout(timerId);
+    if (timerId) clearTimeout(timerId);
+
+    // Видаляємо з Map одразу: повторний hideToast не спрацює двічі,
+    // а тост, що вже зникає, не займає місце в ліміті
+    MessageManager.#activeToasts.delete(id);
 
     element.classList.remove('show');
-    element.addEventListener('transitionend', () => {
-      element.remove();
-      this.#activeToasts.delete(id);
-    }, { once: true });
+    element.addEventListener('transitionend', () => element.remove(), { once: true });
+
+    // Страховка на випадок, якщо transitionend не спрацює
+    setTimeout(() => element.remove(), 500);
   }
 
-  clearAllToasts() {
-    this.#activeToasts.forEach((_, id) => this.hideToast(id));
+  static clearAllToasts() {
+    [...MessageManager.#activeToasts.keys()]
+      .forEach(id => MessageManager.hideToast(id));
   }
 
   // ==========================================================================
-  // PRIVATE — ініціалізація
+  // PRIVATE — ліниве отримання DOM-елементів
   // ==========================================================================
-  #initContainer() {
+  static #getHeader() {
+    const els = MessageManager.#elements;
+    if (!els.header?.isConnected) {
+      els.header = document.querySelector('header');
+    }
+    return els.header;
+  }
+
+  static #getStatusHost() {
+    const header = MessageManager.#getHeader();
+    return header?.querySelector('.app-name') ?? header;
+  }
+
+  static #getContainer() {
+    const els = MessageManager.#elements;
+    if (els.container?.isConnected) return els.container;
+
     let container = document.querySelector('.validator-container');
     if (!container) {
       container = document.createElement('div');
       container.className = 'validator-container z-999 flex-col-rev flex-center g-10';
       document.body.appendChild(container);
     }
-    this.#elements.container = container;
+    els.container = container;
+    return container;
   }
 
   // ==========================================================================
   // PRIVATE — статус у хедері
   // ==========================================================================
-  #findStatusBlock(id) {
-    return this.#elements.header.querySelector(`.message-block[data-id="${id}"]`);
+  static #findStatusBlock(id) {
+    return MessageManager.#getHeader()
+      ?.querySelector(`.message-block[data-id="${id}"]`);
   }
 
-  #revealStatusBlock(block) {
+  static #revealStatusBlock(block) {
     block.style.opacity = '1';
     block.style.transform = 'translateY(0)';
   }
 
-  #createStatusBlock({ text, textParts, icon, type, url, id, closable }) {
+  static #createStatusBlock({ text, textParts, icon, type, url, id, closable }) {
     const block = document.createElement('a');
-    block.href = url;
-    block.target = '_blank';
+    if (url) {
+      block.href = url;
+      block.target = '_blank';
+    }
 
     block.className = 'message-block p-0-5';
     block.dataset.id = id;
@@ -179,20 +218,20 @@ export class MessageManager {
 
     const textEl = document.createElement('span');
     textEl.className = 'message-text t11_px';
-    this.#setStatusText(textEl, text, textParts);
+    MessageManager.#setStatusText(textEl, text, textParts);
     content.appendChild(textEl);
 
     item.append(iconEl, content);
 
     if (closable) {
-      item.appendChild(this.#createCloseButton(block));
+      item.appendChild(MessageManager.#createCloseButton(block));
     }
 
     block.appendChild(item);
     return block;
   }
 
-  #createCloseButton(block) {
+  static #createCloseButton(block) {
     const closeBtn = document.createElement('button');
     const closeIcon = document.createElement('div');
 
@@ -201,13 +240,18 @@ export class MessageManager {
     closeIcon.className = 'icon ic_cross';
     closeBtn.append(closeIcon);
 
-    closeBtn.addEventListener('click', () => this.hideStatus(block), { once: true });
+    closeBtn.addEventListener('click', () => MessageManager.hideStatus(block), { once: true });
     return closeBtn;
   }
 
-  #updateStatusBlock(block, { id, text, textParts, icon, url, type }) {
-    block.href = url;
-    block.target = '_blank';
+  static #updateStatusBlock(block, { id, text, textParts, icon, url, type }) {
+    if (url) {
+      block.href = url;
+      block.target = '_blank';
+    } else {
+      block.removeAttribute('href');
+      block.removeAttribute('target');
+    }
 
     const item = block.querySelector('.message-item');
     const iconEl = block.querySelector('.icon');
@@ -218,10 +262,10 @@ export class MessageManager {
       item.dataset.type = type;
     }
     if (iconEl) iconEl.className = `icon small ${icon}`;
-    if (textEl) this.#setStatusText(textEl, text, textParts);
+    if (textEl) MessageManager.#setStatusText(textEl, text, textParts);
   }
 
-  #setStatusText(element, text, textParts) {
+  static #setStatusText(element, text, textParts) {
     element.replaceChildren();
 
     if (!textParts?.length) {
@@ -240,7 +284,7 @@ export class MessageManager {
   // ==========================================================================
   // PRIVATE — toast
   // ==========================================================================
-  #createToastElement({ text, icon, type, id }) {
+  static #createToastElement({ text, icon, type, id }) {
     const toast = document.createElement('div');
     toast.className = 'toast-msg glass-panel g-8 flex-center';
     toast.dataset.type = type;
@@ -260,20 +304,23 @@ export class MessageManager {
     return toast;
   }
 
-  #updateToast(id, { text, icon, type, emotional }) {
-    const { element } = this.#activeToasts.get(id);
+  static #updateToast(id, { text, icon, type, emotional }) {
+    const { element } = MessageManager.#activeToasts.get(id);
     const iconEl = element.querySelector('.icon');
     const textEl = element.querySelector('.toast-text');
 
-    if (element) {
-      element.dataset.type = type;
-      element.classList.add('show');
-    }
+    element.dataset.type = type;
+    element.classList.add('show');
+
     if (iconEl) iconEl.className = `icon ${icon}`;
-    if (textEl) textEl.textContent = emotional ? this.#addEmotionalEnding(text) : text;
+    if (textEl) {
+      textEl.textContent = emotional
+        ? MessageManager.#addEmotionalEnding(text)
+        : text;
+    }
   }
 
-  #addEmotionalEnding(text) {
+  static #addEmotionalEnding(text) {
     const endings = ['!', '>:(', '😤', '💢', '🤬', '!! 😠', '😡💥'];
     const randomEnding = endings[Math.floor(Math.random() * endings.length)];
     return `${text} ${randomEnding}`;

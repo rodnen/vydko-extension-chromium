@@ -7,6 +7,7 @@ import { renderSupport } from '../view/templates/supportTemplate.js';
 import { renderBugReportStep } from '../view/templates/bugReportTemplate.js';
 import { renderTimerSettings, renderTimerSummary } from '../view/templates/timerSettingsTemplate.js';
 import { renderCrypto } from '../view/templates/cryptoTemplate.js';
+import { MessageManager } from './messageManager.js';
 
 // ============================================================================
 // МЕНЕДЖЕР ДІАЛОГІВ
@@ -16,9 +17,8 @@ import { renderCrypto } from '../view/templates/cryptoTemplate.js';
 export class DialogManager {
   #view;
 
-  constructor(dom, cacheManager, messageManager, i18n) {
+  constructor(dom, cacheManager, i18n) {
     this.cacheManager = cacheManager;
-    this.messageManager = messageManager;
     this.i18n = i18n;
 
     this.onCheckUpdate = null;
@@ -107,9 +107,17 @@ export class DialogManager {
         const success = await Utils.copyStaticText(actionEl.dataset.address);
 
         if (success) {
-          this.#toast(this.i18n.get('dialogCopySuccess'), 'success', 'ic_check', 3000);
+          MessageManager.toast({
+            text: this.i18n.get('dialogCopySuccess'),
+            type: 'success',
+            icon: 'ic_check'
+          });
         } else {
-          this.#toast(this.i18n.get('dialogCopyFailure'), 'error', 'ic_error', 3000);
+          MessageManager.toast({
+            text: this.i18n.get('dialogCopyFailure'),
+            type: 'error',
+            icon: 'ic_error'
+          });
         }
 
         break;
@@ -124,19 +132,11 @@ export class DialogManager {
     const cache = await Utils.getStorageSize();
     cacheBtn.querySelector('.cache-info').innerText = this.i18n.formatBytes(cache.bytes);
 
-    this.#toast(`${this.i18n.get('dialogCacheCleared')} (${removed})`, 'success', 'ic_check', 2000);
-  }
-
-  // ---------------------------------------------------------------------
-  // Спільні хелпери логіки
-  // ---------------------------------------------------------------------
-
-  #toast(text, type, icon, duration = 3000, emotional = false) {
-    return this.messageManager?.showToast({ text, type, icon, duration, emotional });
-  }
-
-  #hideToast(toastId) {
-    if (toastId) this.messageManager?.hideToast(toastId);
+    MessageManager.toast({
+      text: `${this.i18n.get('dialogCacheCleared')} (${removed})`,
+      type: 'success',
+      icon: 'ic_check'
+    });
   }
 
   /**
@@ -152,8 +152,14 @@ export class DialogManager {
       await action();
       return true;
     } catch (error) {
-      this.#toast(`${errorPrefix}: ${error.message || this.i18n.get('dialogTryAgain')}`, 'error', 'ic_error', 5000, true);
-      console.error(errorPrefix, error);
+
+      MessageManager.toast({
+        text: `${errorPrefix}: ${error.message || this.i18n.get('dialogTryAgain')}`,
+        type: 'error',
+        icon: 'ic_error',
+        duration: 5000,
+        emotional: true
+      });
 
       btn.disabled = false;
       btn.innerHTML = idleText;
@@ -349,7 +355,11 @@ export class DialogManager {
 
         if (action === 'cancel-bug') {
           this.#view.closeDialog();
-          this.#toast(this.i18n.get('dialogBugCancelled'), 'info', 'ic_info', 2000);
+          MessageManager.toast({
+            text: this.i18n.get('dialogBugCancelled'),
+            type: 'info',
+            icon: 'ic_info'
+          });
           return;
         }
 
@@ -361,7 +371,13 @@ export class DialogManager {
 
         const validationError = validateField(field, validation);
         if (validationError) {
-          this.#toast(validationError, 'error', 'ic_error', 2500, true);
+          MessageManager.toast({
+            text: validationError,
+            type: 'error',
+            icon: 'ic_error',
+            emotional: true
+          });
+
           Utils.setErrorTextarea(field);
           field.focus();
           return;
@@ -390,7 +406,12 @@ export class DialogManager {
             timestamp: new Date().toISOString()
           };
 
-          const sendingToastId = this.#toast(this.i18n.get('dialogBugSending'), 'info', null, 10000);
+          const sendingToastId = MessageManager.toast({
+            text: his.i18n.get('dialogBugSending'),
+            type: 'info',
+            icon: 'ic_info',
+            duration: 10000
+          });
 
           const ok = await this.#runButtonAction(btn, {
             loadingText: this.i18n.get('dialogBugSending'),
@@ -399,10 +420,14 @@ export class DialogManager {
             action: () => onSubmit?.(reportData)
           });
 
-          this.#hideToast(sendingToastId);
+          MessageManager.hideToast(sendingToastId);
 
           if (ok) {
-            this.#toast(this.i18n.get('dialogBugSent'), 'success', 'ic_check', 4000);
+            MessageManager.toast({
+              text: this.i18n.get('dialogBugSent'),
+              type: 'success',
+              icon: 'ic_check'
+            });
             this.#view.closeDialog();
           } else {
             isSubmitting = false;
@@ -421,13 +446,13 @@ export class DialogManager {
   // ---------------------------------------------------------------------
 
   /**
- * Показує діалог налаштування таймера сповіщень.
- *
- * @param {{delay:number, frequency:number, enabled:boolean}} currentSettings
- *   Поточні значення у хвилинах.
- * @param {(settings:{enabled:boolean, delay:number, frequency:number}) => Promise<void>|void} onSave
- *   Викликається з новими налаштуваннями після підтвердження.
- */
+  * Показує діалог налаштування таймера сповіщень.
+  *
+  * @param {{delay:number, frequency:number, enabled:boolean}} currentSettings
+  *   Поточні значення у хвилинах.
+  * @param {(settings:{enabled:boolean, delay:number, frequency:number}) => Promise<void>|void} onSave
+  *   Викликається з новими налаштуваннями після підтвердження.
+  */
   showTimerSettings(currentSettings = {}, onSave) {
     let isSubmitting = false;
     const enabled = currentSettings.enabled ?? false;
@@ -530,7 +555,13 @@ export class DialogManager {
 
         if (raw === '' || Number.isNaN(num) || !Number.isInteger(num)) {
           const message = this.i18n.get('dialogTimerIntegerRequired').replace('{label}', this.i18n.get(label));
-          this.#toast(message, 'error', 'ic_error', 2500);
+
+          MessageManager.toast({
+            text: message,
+            type: 'error',
+            icon: 'ic_error'
+          });
+
           input.classList.add('error');
           input.focus();
           return null;
@@ -540,7 +571,13 @@ export class DialogManager {
             .replace('{label}', this.i18n.get(label))
             .replace('{min}', min)
             .replace('{max}', max);
-          this.#toast(message, 'error', 'ic_error', 2500);
+
+          MessageManager.toast({
+            text: message,
+            type: 'error',
+            icon: 'ic_error'
+          });
+
           input.classList.add('error');
           input.focus();
           return null;
@@ -562,7 +599,13 @@ export class DialogManager {
 
       if (action === 'cancel-timer') {
         this.#view.closeDialog();
-        this.#toast(this.i18n.get('dialogTimerCancelled'), 'info', 'ic_info', 2000);
+
+        MessageManager.toast({
+          text: this.i18n.get('dialogTimerCancelled'),
+          type: 'info',
+          icon: 'ic_info'
+        });
+
         return;
       }
 
@@ -582,7 +625,12 @@ export class DialogManager {
         });
 
         if (ok) {
-          this.#toast(this.i18n.get('dialogTimerSaved'), 'success', 'ic_check', 3000);
+          MessageManager.toast({
+            text: this.i18n.get('dialogTimerSaved'),
+            type: 'success',
+            icon: 'ic_check'
+          });
+
           this.#view.closeDialog();
         } else {
           isSubmitting = false;

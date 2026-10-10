@@ -11,9 +11,9 @@
   <header class="flex-col">
     <div class="app-header p-8 flex-between">
       <div class="brand g-075 flex-center">
-        <div class="btn app-btn brand-icon flex-center glass-panel">
+        <a href="https://github.com/rodnen/vydko-extension-chromium" target="_blank" class="btn app-btn brand-icon flex-center glass-panel">
           <div class="app-icon"></div>
-        </div>
+        </a>
         <div class="brand-name flex-col">
             <div class="app-name flex">
                 <span data-i18n="extName" class="secondary-text"></span>
@@ -39,18 +39,18 @@
           <div id="main-popup-menu" class="popup-menu z-999 glass-panel glass-blur">
 
             <button class="menu-item g-075 t12_px" data-action="provider" data-i18n-title="provider">
-              <span class="icon ic_building"></span>
-              <div class="menu-content flex-between">
-                <span data-i18n="provider"></span>
-                <span></span>
-              </div>
+                <span class="icon ic_building"></span>
+                <div class="menu-content flex-between">
+                    <span data-i18n="provider"></span>
+                    <span data-direction="left"></span>
+                </div>
             </button>
 
             <button class="menu-item g-075 t12_px" data-action="theme" data-i18n-title="theme">
               <span class="icon ic_system"></span>
               <div class="menu-content flex-between">
                 <span data-i18n="theme"></span>
-                <span data-i18n="system"></span>
+                <span data-words='["system","dark","light"]' data-direction="left"></span>
               </div>
             </button>
 

@@ -3,7 +3,6 @@ import { Utils } from './utils/utils.js';
 import { DOMElements } from './dom/domElements.js';
 import { CacheManager } from './managers/cacheManager.js';
 import { NotificationView } from './view/notificationView.js';
-import { MessageManager } from './managers/messageManager.js';
 import { DialogManager } from './managers/dialogManager.js';
 import { VersionManager } from './managers/versionManager.js';
 import { DateManager } from './managers/dateManager.js';
@@ -33,14 +32,12 @@ export class App {
     this.cacheManager = new CacheManager();
     await this.cacheManager.load();
 
-    this.messageManager = new MessageManager(dom);
     this.dialogManager = new DialogManager(
       dom,
       this.cacheManager,
-      this.messageManager,
       this.i18n
     );
-    this.versionManager = new VersionManager(this.dialogManager, this.messageManager, this.i18n);
+    this.versionManager = new VersionManager(this.dialogManager, this.i18n);
     this.dateManager = new DateManager(dom, this.i18n, () => this.dataManager.loadData());
     this.notificationView = new NotificationView(dom, this.i18n);
 
@@ -102,7 +99,6 @@ export class App {
     this.refreshManager = new RefreshManager(
       dom,
       this.cacheManager,
-      this.messageManager,
       this.i18n,
       async () => {
         await this.dataManager.loadData();
