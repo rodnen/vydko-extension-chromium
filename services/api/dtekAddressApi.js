@@ -1,4 +1,9 @@
 import { CONSTANTS } from '../../config/constants.js';
+import { Utils } from '../../utils/utils.js';
+
+// Скільки символів тіла помилкової відповіді показуємо користувачеві.
+// DTEK/CDN можуть віддати цілу HTML-сторінку помилки.
+const MAX_ERROR_BODY_LENGTH = 200;
 
 /**
  * Клас для роботи з DTEK API (сайти dnem / kem).
@@ -41,24 +46,33 @@ export class DtekAddressApi {
     this.i18n = i18n;
   }
 
+  /** Єдиний формат помилки для UI: { message, url }. Тайм-аут локалізується. */
+  #toError(e, url) {
+    return {
+      message: Utils.isTimeoutError(e)
+        ? this.i18n.get('apiRequestTimeout', String(CONSTANTS.FETCH_TIMEOUT_MS / 1000))
+        : (e?.message ?? String(e)),
+      url,
+    };
+  }
+
   /** Отримати CSRF-токен та csrf-параметр з головної сторінки. */
   async fetchCsrf() {
     const { referer: refererPage } = this.urls;
 
     try {
-      const pageResponse = await fetch(refererPage, {
-        method: 'GET',
-        credentials: 'include',
-      });
+      const html = await Utils.fetchWithTimeout(
+        refererPage,
+        { method: 'GET', credentials: 'include' },
+        undefined,
+        async (pageResponse) => {
+          if (!pageResponse.ok) {
+            throw { message: this.i18n.get('apiDtekPageLoadError') };
+          }
+          return pageResponse.text();
+        }
+      );
 
-      if (!pageResponse.ok) {
-        throw {
-          message: this.i18n.get('apiDtekPageLoadError'),
-          url: refererPage,
-        };
-      }
-
-      const html = await pageResponse.text();
       const csrfToken = html.match(/<meta name="csrf-token" content="(.*?)">/)?.[1];
       const csrfParam = html.match(/<meta name="csrf-param" content="(.*?)">/)?.[1] || '_csrf';
 
@@ -71,10 +85,7 @@ export class DtekAddressApi {
       return { csrfToken, csrfParam };
     }
     catch (e) {
-      throw {
-        message: e.message,
-        url: refererPage,
-      };
+      throw this.#toError(e, refererPage);
     }
   }
 
@@ -96,37 +107,38 @@ export class DtekAddressApi {
     const formData = this.buildFormData({ method, fields, csrfParam, csrfToken });
 
     try {
-      const response = await fetch(ajaxPage, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'application/json, text/javascript, */*; q=0.01',
-          'Referer': refererPage,
-          'Origin': originPage,
+      return await Utils.fetchWithTimeout(
+        ajaxPage,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'Referer': refererPage,
+            'Origin': originPage,
+          },
+          credentials: 'include',
+          body: formData.toString(),
         },
-        credentials: 'include',
-        body: formData.toString(),
-      });
+        undefined,
+        async (response) => {
+          if (!response.ok) {
+            const errorText = (await response.text()).slice(0, MAX_ERROR_BODY_LENGTH);
+            throw {
+              message: this.i18n.get('apiDtekHttpError', [
+                String(response.status),
+                errorText
+              ]),
+            };
+          }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw {
-          message: this.i18n.get('apiDtekHttpError', [
-            String(response.status),
-            errorText
-          ]),
-          url: refererPage,
-        };
-      }
-
-      return response.json();
+          return response.json();
+        }
+      );
     }
     catch (e) {
-      throw {
-        message: e.message,
-        url: refererPage,
-      };
+      throw this.#toError(e, refererPage);
     }
   }
 

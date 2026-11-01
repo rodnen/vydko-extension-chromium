@@ -14,6 +14,9 @@
  *   api.dsoId = 401;
  */
 
+import { CONSTANTS } from '../../config/constants.js';
+import { Utils } from '../../utils/utils.js';
+
 export class YasnoAddressApi {
   baseUrl = 'https://app.yasno.ua/api/blackout-service/public/shutdowns';
   addressesPath = 'addresses/v2';
@@ -86,21 +89,24 @@ export class YasnoAddressApi {
     return this.request(url);
   }
 
-  /** Внутрішній виконавець запиту. */
+  /** Внутрішній виконавець запиту (з тайм-аутом на заголовки та тіло відповіді). */
   async request(url) {
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(this.i18n.get('apiYasnoHttpError', [
-          String(response.status),
-          response.statusText
-        ]));
-      }
-      return response.json();
+      return await Utils.fetchWithTimeout(url, {}, undefined, async (response) => {
+        if (!response.ok) {
+          throw new Error(this.i18n.get('apiYasnoHttpError', [
+            String(response.status),
+            response.statusText
+          ]));
+        }
+        return response.json();
+      });
     }
     catch (e) {
       throw {
-        message: e.message,
+        message: Utils.isTimeoutError(e)
+          ? this.i18n.get('apiRequestTimeout', String(CONSTANTS.FETCH_TIMEOUT_MS / 1000))
+          : (e?.message ?? String(e)),
         url: url,
       };
     }
