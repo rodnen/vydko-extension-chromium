@@ -33,6 +33,10 @@ export class CacheManager {
 
   // Завантажити весь кеш із storage один раз
   async load() {
+    // Скасовуємо відкладений запис, щоб він не перезаписав щойно очищений storage.
+    clearTimeout(this.#saveTimer);
+    this.#saveTimer = null;
+
     this.#activeProvider = await Utils.getProvider();
 
     try {

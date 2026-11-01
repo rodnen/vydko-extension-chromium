@@ -91,14 +91,65 @@ export class BackgroundCacheService {
     }
   }
 
+  /**
+   * Прибирає з appCache лише кешовані адресні дані (списки будинків і дані
+   * будинку), зберігаючи вибраний ОСР, чергу та адресу користувача.
+   * @param {string} raw
+   * @returns {string|null} оновлений JSON або null, якщо його неможливо розібрати
+   */
+  #stripAddressCache(raw) {
+    try {
+      const cache = JSON.parse(raw);
+      if (!cache || typeof cache !== 'object') return null;
+
+      for (const provider of Object.values(cache)) {
+        const byDso = provider?.byDso;
+        if (!byDso || typeof byDso !== 'object') continue;
+
+        for (const dso of Object.values(byDso)) {
+          if (!dso || typeof dso !== 'object') continue;
+          delete dso.houses;
+          delete dso.houseData;
+        }
+      }
+
+      return JSON.stringify(cache);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Очищає лише кеш таблиць і кеш адрес. Налаштування користувача
+   * (провайдер, тема, мова, сповіщення, вибрана адреса) не змінюються.
+   */
   async clearAllCache() {
     try {
       const all = await chrome.storage.local.get();
-      const removedCount = Object.keys(all).length;
+      const toRemove = Object.keys(all).filter(key =>
+        key.startsWith(CONSTANTS.CACHE_KEY_PREFIX) ||
+        key.startsWith('dtek:raw:')
+      );
 
-      await chrome.storage.local.clear();
+      let appCacheCleared = false;
+      if (typeof all.appCache === 'string') {
+        const stripped = this.#stripAddressCache(all.appCache);
+        if (stripped == null) {
+          toRemove.push('appCache');
+        } else {
+          await Utils.setStorageData({ appCache: stripped });
+          appCacheCleared = stripped !== all.appCache;
+        }
+      }
 
-      return { success: true, removed: removedCount };
+      if (toRemove.length) {
+        await Utils.removeStorageData(toRemove);
+      }
+
+      return {
+        success: true,
+        removed: toRemove.length + (appCacheCleared ? 1 : 0)
+      };
     } catch (error) {
       return { success: false, error };
     }
