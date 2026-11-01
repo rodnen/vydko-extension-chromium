@@ -62,7 +62,14 @@ export class ScheduleService {
   }
 
   async buildDtekTable(type = 'dnem', group = 'all', dayType = 'today') {
-    if (Utils.isInvalidValue(type)) {
+    // Не лише 'none': у DSOID_TO_DTEK_TYPE є типи (напр. 'cek'), для яких
+    // у DTEK немає ендпоінта. Для них просимо обрати ОСР, а не шлемо запит,
+    // що гарантовано закінчиться «Невідомий тип DTEK API».
+    if (Utils.isInvalidValue(type) || !Utils.isDtekApiType(type)) {
+      if (!Utils.isInvalidValue(type)) {
+        console.warn('[DTEK] unsupported type, skipping request:', type);
+      }
+
       return {
         success: true,
         html: '',
@@ -74,7 +81,7 @@ export class ScheduleService {
 
     try {
       const cacheParts = [
-        'table-v2',
+        'table-v3',
         `dtek-${type}`,
         type,
         group,
@@ -84,24 +91,44 @@ export class ScheduleService {
       const cached = await this.cache.get(cacheParts);
       if (cached) return cached;
 
-      const rawData = await this.address.fetchDtekDefaultData(type);
-      if (!rawData) return null;
+      // Паралельні однакові запити (відкриття popup, перемикання дня,
+      // кілька вкладок) об'єднуються в один похід до DTEK.
+      const requestKey = JSON.stringify(['dtek-table', cacheParts]);
+      return await this.cache.getOrCreateRequest(requestKey, async () => {
+        const secondCheck = await this.cache.get(cacheParts);
+        if (secondCheck) return secondCheck;
 
-      const rendered = renderDtekTable(rawData, group, dayType, this.i18n);
-      const result = {
-        success: rawData.success,
-        html: rendered?.html ?? '',
-        status: rendered?.status ?? null,
-        outageDates: rendered?.outageDates ?? [],
-        updatedOn: Utils.toIso(rawData.data?.update)
-      };
+        const rawData = await this.#fetchDtekRaw(type);
 
-      await this.cache.set(cacheParts, result);
-      return result;
+        // renderDtekTable кидає помилку на некоректних даних, тож сюди
+        // доходять лише валідні результати. Помилки не кешуються.
+        const rendered = renderDtekTable(rawData, group, dayType, this.i18n);
+        const result = {
+          success: true,
+          html: rendered.html,
+          status: rendered.status,
+          outageDates: rendered.outageDates,
+          updatedOn: Utils.toIso(rawData.data?.update)
+        };
+
+        await this.cache.set(cacheParts, result);
+        return result;
+      });
     } catch (error) {
       console.error('[DTEK] error:', error);
       return { success: false, error: serializeError(error, this.i18n) };
     }
+  }
+
+  /**
+   * Сирі дані DTEK для типу. Ті самі дані обслуговують усі черги/дні/мови,
+   * тому одночасні запити різних комбінацій теж ділять один мережевий виклик.
+   */
+  #fetchDtekRaw(type) {
+    return this.cache.getOrCreateRequest(
+      `dtek-raw:${type}`,
+      () => this.address.fetchDtekDefaultData(type)
+    );
   }
 
   async saveScheduleAndReturn(result) {

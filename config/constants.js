@@ -42,6 +42,7 @@ export const CONSTANTS = {
   EASTER_EGG_DATES: Object.freeze({ today: 6, tomorrow: 7 }),
   EASTER_EGG_GIF: 'https://cdn.7tv.app/emote/01K91ZKMKBW0EA884967R3MHCM/1x.gif',
   CHECK_INTERVAL: 6 * 60 * 60 * 1000,
+  FETCH_TIMEOUT_MS: 10 * 1000,
 
   PROVIDER,
   PROVIDERS,
@@ -54,6 +55,8 @@ export const CONSTANTS = {
 
   DTEK_DNEM_ORIGIN_URL,
   DTEK_KEM_ORIGIN_URL,
+  // Типи, для яких існує ajax-ендпоінт DTEK (див. DtekAddressApi).
+  DTEK_API_TYPES: Object.freeze(['dnem', 'kem']),
 
   DTEK_DNEM_AJAX_URL: `${DTEK_DNEM_ORIGIN_URL}/ajax`,
   DTEK_KEM_AJAX_URL: `${DTEK_KEM_ORIGIN_URL}/ajax`,

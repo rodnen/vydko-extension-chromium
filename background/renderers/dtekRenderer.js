@@ -9,9 +9,18 @@ const STATUS_MAP = {
   second: ['power', 'outage']
 };
 
+const DAY_SECONDS = 86400;
+// Перехід на літній/зимовий час зсуває «наступну північ» на годину.
+const DST_TOLERANCE_SECONDS = 3600;
+
 export function buildHalfHourSlots(hoursData) {
+  if (!hoursData || typeof hoursData !== 'object') return [];
+
   return Object.entries(hoursData).flatMap(([hour, value]) => {
-    const base = (Number(hour) - 1) * 60;
+    const hourNumber = Number(hour);
+    if (!Number.isFinite(hourNumber)) return [];
+
+    const base = (hourNumber - 1) * 60;
     const [firstHalf, secondHalf] = STATUS_MAP[value] ?? ['power', 'power'];
 
     return [
@@ -37,33 +46,84 @@ export function mergeSlots(slots) {
   }, [{ ...slots[0] }]);
 }
 
+function getGroupNames(dayData, group) {
+  return group === 'all'
+    ? Object.keys(dayData)
+      .filter(keyName => keyName.startsWith('GPV'))
+      .sort(compareGroups)
+    : [`GPV${group}`];
+}
+
+/**
+ * Перевіряє структуру відповіді DTEK і повертає функцію доступу до днів.
+ * Кидає помилку, якщо відповідь некоректна (null, без today тощо), замість
+ * того щоб тихо повернути порожній «успішний» результат.
+ */
+function parseFact(factData, i18n) {
+  const fact = factData?.data;
+  const hasToday = fact != null && typeof fact === 'object'
+    && fact.today != null && Number.isFinite(Number(fact.today));
+
+  if (!factData?.success || !hasToday) {
+    throw new Error(i18n.get('apiDtekInvalidData'));
+  }
+
+  const today = Number(fact.today);
+  const lookup = key => fact.data?.[key] ?? fact[key];
+
+  // «Завтра» — це наступний ключ дня. Зазвичай today + 24 год, але на межі
+  // зміни часу різниця 23/25 год, тому шукаємо ключ із допуском.
+  const exact = today + DAY_SECONDS;
+  const tomorrow = lookup(exact)
+    ? exact
+    : Object.keys(fact.data ?? {})
+      .map(Number)
+      .find(ts => Math.abs(ts - exact) <= DST_TOLERANCE_SECONDS) ?? exact;
+
+  return { today, tomorrow, lookup };
+}
+
+/** Майбутні початки відключень для одного дня (для планувальника сповіщень). */
+function collectOutageDates(dayData, group, baseTimestamp, now) {
+  if (!dayData || typeof dayData !== 'object') return [];
+
+  return getGroupNames(dayData, group).flatMap(groupName => {
+    if (!dayData[groupName]) return [];
+
+    return mergeSlots(buildHalfHourSlots(dayData[groupName]))
+      .filter(slot => slot.status === 'outage')
+      .map(slot => Utils.minutesToDate(baseTimestamp, slot.start))
+      .filter(date => date > now);
+  });
+}
+
 export function renderDtekTable(factData, group, dayType, i18n) {
-  if (!factData?.success || !group) {
+  if (!group) {
     return { html: '', status: null, outageDates: [] };
   }
 
-  const todayTimestamp = factData.data.today;
-  const tomorrowTimestamp = todayTimestamp + 86400;
-  if (todayTimestamp == null) {
-    return { html: '', status: null, outageDates: [] };
-  }
+  const { today: todayTimestamp, tomorrow: tomorrowTimestamp, lookup } = parseFact(factData, i18n);
+  const now = new Date();
+
+  // Сповіщення потребують обох днів незалежно від того, яку вкладку
+  // відкрито, інакше перегляд «завтра» стирав би сьогоднішні відключення.
+  const outageDates = [
+    ...collectOutageDates(lookup(todayTimestamp), group, todayTimestamp, now),
+    ...collectOutageDates(lookup(tomorrowTimestamp), group, tomorrowTimestamp, now)
+  ].sort((a, b) => a - b);
 
   const key = dayType === 'today' ? todayTimestamp : tomorrowTimestamp;
-  const dayData = factData.data.data?.[key] ?? factData.data?.[key];
+  const dayData = lookup(key);
 
   if (!dayData) {
     return {
       html: '',
       status: 'ok',
-      outageDates: []
+      outageDates
     };
   }
 
-  const groups = group === 'all'
-    ? Object.keys(dayData)
-      .filter(keyName => keyName.startsWith('GPV'))
-      .sort(compareGroups)
-    : [`GPV${group}`];
+  const groups = getGroupNames(dayData, group);
 
   const onlyGroupData = groups.length === 1 ? dayData[groups[0]] : null;
   const onlyGroupSlots = onlyGroupData
@@ -72,25 +132,12 @@ export function renderDtekTable(factData, group, dayType, i18n) {
   const isSingleNoOutageGroup = onlyGroupSlots.length === 1
     && onlyGroupSlots[0].status !== 'outage';
 
-  const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const outageDates = [];
 
   const html = isSingleNoOutageGroup ? '' : groups.map(currentGroup => {
     if (!dayData[currentGroup]) return '';
 
     const slots = mergeSlots(buildHalfHourSlots(dayData[currentGroup]));
-
-    slots.forEach(slot => {
-      if (slot.status !== 'outage') return;
-
-      const baseTimestamp = dayType === 'today'
-        ? todayTimestamp
-        : tomorrowTimestamp;
-
-      const slotTimestamp = Utils.minutesToDate(baseTimestamp, slot.start);
-      if (slotTimestamp > now) outageDates.push(slotTimestamp);
-    });
 
     return slots.map(slot => buildSlotHTML({
       i18n,
@@ -103,28 +150,9 @@ export function renderDtekTable(factData, group, dayType, i18n) {
     })).filter(Boolean).join('');
   }).join('');
 
-  const status = isSingleNoOutageGroup ? 'ok' : null;
+  // Порожній екран без пояснення гірший за статус «очікуємо оновлення»:
+  // для вибраної черги графіка може просто не бути.
+  const status = isSingleNoOutageGroup ? 'ok' : (html ? null : 'info');
 
-  if (dayType === 'today') {
-    const tomorrowData = tomorrowTimestamp;
-
-    if (tomorrowData) {
-      groups.forEach(currentGroup => {
-        if (!tomorrowData[currentGroup]) return;
-
-        const slots = mergeSlots(buildHalfHourSlots(tomorrowData[currentGroup]));
-        slots.forEach(slot => {
-          if (slot.status === 'outage') {
-            outageDates.push(Utils.minutesToDate(
-              tomorrowTimestamp,
-              slot.start
-            ));
-          }
-        });
-      });
-    }
-  }
-
-  outageDates.sort((a, b) => a - b);
   return { html, status, outageDates };
 }

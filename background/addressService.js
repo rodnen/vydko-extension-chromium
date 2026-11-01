@@ -108,10 +108,31 @@ export class AddressService {
     }
   }
 
+  /**
+   * Завантажує «факт» (графік) DTEK за типом. Некоректну відповідь
+   * (null, result/success=false, відсутній fact) перетворює на помилку,
+   * щоб вона не маскувалась під порожній успішний результат.
+   */
   async fetchDtekDefaultData(type) {
-    const params = DEFAULT_PARAMS[type];
-    const data = await this.getDtekApi(type).getHomeNum(params);
-    return { success: true, data: data.fact };
+    const api = this.getDtekApi(type);
+    const response = await api.getHomeNum(DEFAULT_PARAMS[type]);
+
+    const fact = response?.fact;
+    const reportedFailure = response?.result === false || response?.success === false;
+    const isValid = response !== null
+      && typeof response === 'object'
+      && !reportedFailure
+      && fact !== null
+      && typeof fact === 'object';
+
+    if (!isValid) {
+      throw {
+        message: this.i18n.get('apiDtekInvalidData'),
+        url: api.urls.referer
+      };
+    }
+
+    return { success: true, data: fact };
   }
 }
 

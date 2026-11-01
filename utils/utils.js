@@ -42,10 +42,82 @@ class Utils {
 
   /* ---------- утиліти часу ---------- */
   static minutesToTime(min) {
-    if (min === 1440) return '00:00';
+    if (min === 1440) return '24:00';
     const h = Math.floor(min / 60);
     const m = min % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  /**
+   * Екранує рядок для безпечної вставки в HTML (текст або атрибут).
+   * @param {*} value - будь-яке значення
+   * @returns {string} - безпечний рядок
+   */
+  static escapeHTML(value) {
+    if (value == null) return '';
+
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  /**
+   * Пропускає лише абсолютні http(s)-URL, щоб не вставити javascript:/data:
+   * у href або інший атрибут.
+   * @param {*} url
+   * @returns {string|null}
+   */
+  static sanitizeUrl(url) {
+    if (typeof url !== 'string' || !url.trim()) return null;
+
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+        ? parsed.href
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Виконує fetch з тайм-аутом через AbortController.
+   *
+   * Якщо передано `consume`, таймер діє, доки цей колбек не завершиться, тобто
+   * охоплює і читання тіла відповіді (response.json()/text()). Без нього таймер
+   * знімається одразу після отримання заголовків, і зависле тіло відповіді
+   * могло б блокувати запит назавжди.
+   *
+   * @param {string} url
+   * @param {RequestInit} [options]
+   * @param {number} [timeoutMs]
+   * @param {(response: Response) => Promise<any>} [consume] - читає тіло відповіді
+   * @returns {Promise<any>} - Response або результат consume
+   */
+  static async fetchWithTimeout(url, options = {}, timeoutMs = CONSTANTS.FETCH_TIMEOUT_MS, consume = null) {
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      return consume ? await consume(response) : response;
+    } catch (error) {
+      if (controller.signal.aborted) {
+        const timeoutError = new Error(`Request timed out after ${timeoutMs} ms`);
+        timeoutError.name = 'TimeoutError';
+        throw timeoutError;
+      }
+      throw error;
+    } finally {
+      clearTimeout(timerId);
+    }
+  }
+
+  static isTimeoutError(error) {
+    return error?.name === 'TimeoutError';
   }
 
   // Конвертує хвилини доби (0-1439) + unix-timestamp дня (сек) у Date
@@ -104,10 +176,20 @@ class Utils {
     return `${id.slice(0, startLen)}...${id.slice(-endLen)}`;
   }
 
+  /**
+   * Чи підтримується тип DTEK API (dnem/kem). Значення на кшталт 'cek' або 'none'
+   * мають відображення в DSOID_TO_DTEK_TYPE, але реального ендпоінта DTEK не мають.
+   * @param {*} type
+   * @returns {boolean}
+   */
+  static isDtekApiType(type) {
+    return CONSTANTS.DTEK_API_TYPES.includes(type);
+  }
+
   static DSOID_TO_DTEK_TYPE = {
     'none': 'none', //Не обрано
     301: 'dnem',    // ДНЕМ
-    303: 'сek',     // ЦЕК
+    303: 'cek',     // ЦЕК
     902: 'kem',     // КЕМ
   };
 
@@ -124,15 +206,20 @@ class Utils {
    * @returns {string} - HTML рядок
    */
   static buildLoadErrorHTML(i18n, error = {}) {
+    const reason = error?.message != null
+      ? Utils.escapeHTML(error.message)
+      : null;
+    const safeUrl = Utils.sanitizeUrl(error?.url);
+
     return `
           <p class="message p-8" data-i18n="loadErrorTitle">${i18n.get('loadErrorTitle')}</p>
 
-          ${error?.message
-        ? `<p class="message p-8 secondary-text"><span data-i18n="loadErrorReason">${i18n.get('loadErrorReason')}</span>: ${error.message}</p>`
+          ${reason
+        ? `<p class="message p-8 secondary-text"><span data-i18n="loadErrorReason">${i18n.get('loadErrorReason')}</span> ${reason}</p>`
         : ''}
 
-          ${error?.url
-        ? `<a href="${error.url}" target="_blank" rel="noopener noreferrer" class="message p-8 secondary-text" data-i18n="loadErrorOpenSite">${i18n.get('loadErrorOpenSite')}</a>`
+          ${safeUrl
+        ? `<a href="${Utils.escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer" class="message p-8 secondary-text" data-i18n="loadErrorOpenSite">${i18n.get('loadErrorOpenSite')}</a>`
         : ''}
 
           <br>
