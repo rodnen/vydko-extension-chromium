@@ -238,11 +238,10 @@ export class VersionManager {
     if (showResult) {
       const meta = getUpdateStateMeta(cmp, latestVer, this.i18n);
       this.dialogManager.updateVersionState(meta);
-
       MessageManager.toast({
-        text: meta.text,
-        icon: meta.icon,
-        type: 'info'
+        text: meta.text ?? '',
+        icon: meta.icon ?? 'ic_info',
+        type: meta.type ?? 'info',
       });
     }
   }
