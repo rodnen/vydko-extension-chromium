@@ -303,5 +303,8 @@
   "loadErrorClearCache": { "message": "clearing the cache" },
   "loadErrorCacheAfter": { "message": "in the “About extension” section." },
   "lightOn": { "message": "Light is on" },
-  "lightOff": { "message": "Light is off" }
+  "lightOff": { "message": "Light is off" },
+  "apiRequestTimeout": { "message": "The server did not respond in time (over $1 s)." },
+  "apiDtekInvalidData": { "message": "DTEK returned invalid or empty data." },
+  "countdownLessThanMinute": { "message": "less than 1 minute" }
 }

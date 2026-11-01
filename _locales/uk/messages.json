@@ -235,5 +235,8 @@
   "loadErrorClearCache": { "message": "очистити кеш" },
   "loadErrorCacheAfter": { "message": "у розділі «Про розширення»." },
   "lightOn": { "message": "Світло є" },
-  "lightOff": { "message": "Світла немає" }
+  "lightOff": { "message": "Світла немає" },
+  "apiRequestTimeout": { "message": "Сервер не відповів вчасно (понад $1 с)." },
+  "apiDtekInvalidData": { "message": "DTEK повернув некоректні або порожні дані." },
+  "countdownLessThanMinute": { "message": "менше 1 хвилини" }
 }

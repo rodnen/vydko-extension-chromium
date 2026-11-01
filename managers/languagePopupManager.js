@@ -19,7 +19,7 @@ export class LanguagePopupManager {
     if (!languageBtn || !languagePopupMenu) return;
 
     const currentSelected = languagePopupMenu.querySelector(`.menu-item[data-value="${this.i18n.getLocale()}"]`);
-    currentSelected.setAttribute('selected', '');
+    currentSelected?.setAttribute('selected', '');
 
     languageBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -40,7 +40,7 @@ export class LanguagePopupManager {
       if (selected) selected.removeAttribute('selected');
       item.setAttribute('selected', '');
 
-      if (item.classList.contains('close-at-click')) mainPopupMenu.classList.remove('active');
+      if (item.classList.contains('close-at-click')) languagePopupMenu.classList.remove('active');
     });
   }
 

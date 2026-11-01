@@ -7,6 +7,7 @@ import { Utils } from '../utils/utils.js';
 // ============================================================================
 export class NotificationView {
   #countdownIntervalId = null;
+  #unsubscribeLocale = null;
 
   #onStorageChanged = (changes, area) => {
     if (area !== 'local') return;
@@ -19,6 +20,9 @@ export class NotificationView {
     this.dom = dom;
     this.i18n = i18n;
     chrome.storage.onChanged.addListener(this.#onStorageChanged);
+    // Одиниці й відмінювання залежать від мови, тож лічильник треба
+    // перемалювати одразу після її зміни, а не за хвилину.
+    this.#unsubscribeLocale = i18n.onLocaleChange(() => this.init());
   }
 
   async init() {
@@ -32,26 +36,30 @@ export class NotificationView {
   /** Викликати при закритті popup, якщо є такий хук — прибирає листенери й таймер. */
   destroy() {
     chrome.storage.onChanged.removeListener(this.#onStorageChanged);
+    this.#unsubscribeLocale?.();
+    this.#unsubscribeLocale = null;
     if (this.#countdownIntervalId) {
       clearInterval(this.#countdownIntervalId);
       this.#countdownIntervalId = null;
     }
   }
 
-  #pluralize(number, one, two, five) {
-    const n = Math.abs(number) % 100;
-    const n1 = n % 10;
-
-    if (n > 10 && n < 20) return `${number} ${five}`;
-    if (n1 > 1 && n1 < 5) return `${number} ${two}`;
-    if (n1 === 1) return `${number} ${one}`;
-    return `${number} ${five}`;
+  /** Форматує кількість одиниць часу за правилами поточної мови (Intl). */
+  #formatUnit(value, unit, unitDisplay) {
+    return new Intl.NumberFormat(this.i18n.getLocale(), {
+      style: 'unit',
+      unit,
+      unitDisplay,
+      maximumFractionDigits: 0
+    }).format(value);
   }
 
   /**
-   * Форматує різницю у мс у вигляд:
-   * - Якщо 1 параметр → "1 день", "2 години", "1 година", "30 хвилин", "менше 1 хвилини"
-   * - Якщо декілька параметрів → "1д. 2г. 30хв."
+   * Форматує різницю у мс залежно від поточної мови:
+   * - Якщо 1 параметр → повна форма з правильним відмінюванням
+   *   (uk: "1 день", "2 години", "30 хвилин"; en: "1 day", "2 hours", "30 minutes")
+   * - Якщо декілька параметрів → коротка (uk: "1 дн. 2 год 30 хв", en: "1 day 2 hr 30 min")
+   * - Менше хвилини → локалізований рядок
    */
   #formatCountdown(diffMs) {
     const totalMinutes = Math.max(0, Math.floor(diffMs / 60000));
@@ -59,24 +67,21 @@ export class NotificationView {
     const hours = Math.floor((totalMinutes % 1440) / 60);
     const minutes = totalMinutes % 60;
 
-    const nonZeroCount = [days, hours, minutes].filter(v => v > 0).length;
-
     if (totalMinutes === 0) {
-      return 'менше 1 хвилини';
+      return this.i18n.get('countdownLessThanMinute');
     }
 
-    if (nonZeroCount === 1) {
-      if (days > 0) return this.#pluralize(days, 'день', 'дні', 'днів');
-      if (hours > 0) return this.#pluralize(hours, 'година', 'години', 'годин');
-      return this.#pluralize(minutes, 'хвилина', 'хвилини', 'хвилин');
-    }
+    const parts = [
+      [days, 'day'],
+      [hours, 'hour'],
+      [minutes, 'minute']
+    ].filter(([value]) => value > 0);
 
-    const parts = [];
-    if (days > 0) parts.push(`${days}д.`);
-    if (hours > 0) parts.push(`${hours}г.`);
-    if (minutes > 0) parts.push(`${minutes}хв.`);
+    const display = parts.length === 1 ? 'long' : 'short';
 
-    return parts.join(' ');
+    return parts
+      .map(([value, unit]) => this.#formatUnit(value, unit, display))
+      .join(' ');
   }
 
   #createCountdownEl(container) {
