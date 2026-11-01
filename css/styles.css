@@ -2097,7 +2097,7 @@ input:checked + .slider:before {
     width: fit-content;
     max-width: calc(100% - 48px);
     transform: translateY(-10px);
-    padding: 8px 12px;
+    padding: 6px 10px;
     font-size: 13px;
     opacity: 0;
     border-radius: 42px;
