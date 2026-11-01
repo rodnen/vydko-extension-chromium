@@ -99,7 +99,7 @@ export class DataManager {
 
     if (!strategy) {
       const errorMsg = `Unknown provider key: ${provider}`;
-      this.#box.showError(errorMsg);
+      this.#box.showError({ message: errorMsg });
       return;
     }
 
@@ -129,7 +129,7 @@ export class DataManager {
     } catch (error) {
       const errorMsg = `loadData error: ${error}`;
       console.error('[DataManager]', errorMsg);
-      this.#box.showError(errorMsg);
+      this.#box.showError({ message: errorMsg });
     }
   }
 

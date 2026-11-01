@@ -11,12 +11,18 @@ export class UpdateService {
     let response;
 
     try {
-      response = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
-        headers: { Accept: 'application/vnd.github+json' }
-      });
+      response = await Utils.fetchWithTimeout(
+        `https://api.github.com/repos/${owner}/${repo}/releases/latest`,
+        { headers: { Accept: 'application/vnd.github+json' } }
+      );
     } catch (error) {
       console.warn('[Update check] network error', error.message);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: Utils.isTimeoutError(error)
+          ? this.i18n.get('apiRequestTimeout', String(CONSTANTS.FETCH_TIMEOUT_MS / 1000))
+          : error.message
+      };
     }
 
     if (response.status === 403 || response.status === 429) {
@@ -41,13 +47,23 @@ export class UpdateService {
     }
 
     let latest;
+    let bodyTimerId;
     try {
-      latest = await response.json();
+      // Заголовки вже отримані, але тіло теж не має права висіти вічно.
+      const bodyTimeout = new Promise((_, reject) => {
+        bodyTimerId = setTimeout(
+          () => reject(new Error('timeout')),
+          CONSTANTS.FETCH_TIMEOUT_MS
+        );
+      });
+      latest = await Promise.race([response.json(), bodyTimeout]);
     } catch {
       return {
         success: false,
         error: this.i18n.get('updateGitHubInvalidResponse')
       };
+    } finally {
+      clearTimeout(bodyTimerId);
     }
 
     if (!latest?.tag_name) {
@@ -87,7 +103,8 @@ export class UpdateService {
       if (id !== 'update-available') return;
 
       chrome.storage.local.get('pendingUpdateUrl', ({ pendingUpdateUrl }) => {
-        if (pendingUpdateUrl) chrome.tabs.create({ url: pendingUpdateUrl });
+        const safeUrl = Utils.sanitizeUrl(pendingUpdateUrl);
+        if (safeUrl) chrome.tabs.create({ url: safeUrl });
       });
 
       chrome.notifications.clear(id);

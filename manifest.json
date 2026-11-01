@@ -23,11 +23,7 @@
     "https://www.dtek-dnem.com.ua/*",
     "https://www.dtek-kem.com.ua/*"
   ],
-  "web_accessible_resources": [
-    {
-      "resources": ["icons/*", "data/*"],
-
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https://cdn.7tv.app; base-uri 'none'; form-action 'none'"
+  }
 }

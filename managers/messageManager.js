@@ -1,3 +1,5 @@
+import { Utils } from '../utils/utils.js';
+
 // ============================================================================
 // МЕНЕДЖЕР ПОВІДОМЛЕНЬ (статичний)
 // ============================================================================
@@ -197,9 +199,12 @@ export class MessageManager {
 
   static #createStatusBlock({ text, textParts, icon, type, url, id, closable }) {
     const block = document.createElement('a');
-    if (url) {
-      block.href = url;
+    // URL приходить із відповіді GitHub (збережений у storage): лише http(s).
+    const safeUrl = Utils.sanitizeUrl(url);
+    if (safeUrl) {
+      block.href = safeUrl;
       block.target = '_blank';
+      block.rel = 'noopener noreferrer';
     }
 
     block.className = 'message-block p-0-5';
@@ -245,9 +250,11 @@ export class MessageManager {
   }
 
   static #updateStatusBlock(block, { id, text, textParts, icon, url, type }) {
-    if (url) {
-      block.href = url;
+    const safeUrl = Utils.sanitizeUrl(url);
+    if (safeUrl) {
+      block.href = safeUrl;
       block.target = '_blank';
+      block.rel = 'noopener noreferrer';
     } else {
       block.removeAttribute('href');
       block.removeAttribute('target');

@@ -28,6 +28,10 @@ const KYIV_DSO_ID = CONSTANTS.KEM_DSO_ID[CONSTANTS.PROVIDER.YASNO];
 // асинхронні: input/blur-хендлери очікують відповідь мережі.
 // ============================================================================
 export class InputManager {
+  // Закриває попап стану електропостачання кліком повз нього. Зберігаємо
+  // посилання, щоб не накопичувати слухачі на document при кожному рендері.
+  #outageOutsideClickHandler = null;
+
   constructor(dom, cacheManager, i18n, onInputFinalSelect) {
     this.dom = dom;
     this.cache = cacheManager;
@@ -459,6 +463,9 @@ export class InputManager {
 
   #buildOutageHtml(data, updateTimestamp) {
     const { sub_type, start_date, end_date } = data;
+    const safeSubType = Utils.escapeHTML(sub_type);
+    const safeStartDate = Utils.escapeHTML(start_date);
+    const safeEndDate = Utils.escapeHTML(end_date);
     const group = this.#extractGroup(data);
     const groupStatus = group
       ? ''
@@ -474,9 +481,9 @@ export class InputManager {
         <div class="outage-card glass-blur p-8 z-5 popup">
             <div class="outage-body">
             ${groupStatus}
-            <p><span data-i18n="outageReason">${this.i18n.get('outageReason')}</span><strong>${sub_type}</strong></p>
-            <p><span data-i18n="outageStart">${this.i18n.get('outageStart')}</span><strong data-outage-start-date="${start_date ?? ''}">${this.i18n.formatFullDateTime(start_date)}</strong></p>
-            <p><span data-i18n="outageEnd">${this.i18n.get('outageEnd')}</span><strong><span data-i18n="outageEndPrefix">${this.i18n.get('outageEndPrefix')}</span> <span data-outage-end-date="${end_date ?? ''}">${this.i18n.formatFullDateTime(end_date)}</span></strong></p>
+            <p><span data-i18n="outageReason">${this.i18n.get('outageReason')}</span><strong>${safeSubType}</strong></p>
+            <p><span data-i18n="outageStart">${this.i18n.get('outageStart')}</span><strong data-outage-start-date="${safeStartDate}">${this.i18n.formatFullDateTime(start_date)}</strong></p>
+            <p><span data-i18n="outageEnd">${this.i18n.get('outageEnd')}</span><strong><span data-i18n="outageEndPrefix">${this.i18n.get('outageEndPrefix')}</span> <span data-outage-end-date="${safeEndDate}">${this.i18n.formatFullDateTime(end_date)}</span></strong></p>
             <p><span data-i18n="outageUpdated">${this.i18n.get('outageUpdated')}</span><strong data-outage-updated-timestamp="${Number.isFinite(timestamp) ? timestamp : ''}">${formattedUpdateDate}</strong></p>
             </div>
         </div>
@@ -485,6 +492,10 @@ export class InputManager {
 
   #buildNoOutageHtml(updateTimestamp) {
     const updated = this.i18n.get('outageUpdated');
+    const timestamp = updateTimestamp == null || updateTimestamp === ''
+      ? NaN
+      : Number(updateTimestamp);
+    const hasTimestamp = Number.isFinite(timestamp);
     const html = `
       <div class="outage-card glass-blur glass-panel p-8 z-5 popup info-mode">
         <div class="outage-body info-text">
@@ -498,7 +509,7 @@ export class InputManager {
             <strong><span data-i18n="checkAgainEmphasis">${this.i18n.get('checkAgainEmphasis')}</span></strong>
             <span data-i18n="checkAgainAfter">${this.i18n.get('checkAgainAfter')}</span>
           </p>
-          <p><span data-i18n="outageUpdated">${updated}</span> <strong data-outage-updated-date="${updateTimestamp}">${this.i18n.formatFullDate(new Date(updateTimestamp))}</strong></p>
+          <p><span data-i18n="outageUpdated">${updated}</span> <strong data-outage-updated-date="${hasTimestamp ? timestamp : ''}">${hasTimestamp ? this.i18n.formatFullDate(new Date(timestamp)) : '—'}</strong></p>
         </div>
       </div>
     `;
@@ -565,7 +576,9 @@ export class InputManager {
       return;
     }
 
-    const hasOutage = data.sub_type?.trim() !== '';
+    // sub_type приходить із зовнішнього API: не покладаємось на те, що це рядок,
+    // і не вважаємо відключенням відсутнє/порожнє поле.
+    const hasOutage = typeof data.sub_type === 'string' && data.sub_type.trim() !== '';
     const outageHtml = hasOutage
       ? this.#buildOutageHtml(data, updateTimestamp)
       : this.#buildNoOutageHtml(updateTimestamp);
@@ -588,7 +601,11 @@ export class InputManager {
       popup.classList.toggle('active');
     });
 
-    document.addEventListener('click', () => popup.classList.remove('active'));
+    if (this.#outageOutsideClickHandler) {
+      document.removeEventListener('click', this.#outageOutsideClickHandler);
+    }
+    this.#outageOutsideClickHandler = () => popup.classList.remove('active');
+    document.addEventListener('click', this.#outageOutsideClickHandler);
     popup.addEventListener('click', (e) => e.stopPropagation());
   }
 
