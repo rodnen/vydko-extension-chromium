@@ -129,10 +129,9 @@ export class MainPopupManager {
       }
 
       case 'bug-report':
-        this.dialogManager.showBugReport((data) => {
-          this.errorReporter.capture(data);
-          this.errorReporter.flush();
-        });
+        // Повертаємо проміс: діалог чекає на відправку і показує помилку,
+        // якщо звіт не пішов (мережа, тайм-аут).
+        this.dialogManager.showBugReport((data) => this.errorReporter.submit(data));
         break;
 
       case 'about':

@@ -1,6 +1,9 @@
 /**
  * Клас для збору, буферизації та відправки помилок на віддалений endpoint (наприклад Google Forms)
  */
+import { CONSTANTS } from '../config/constants.js';
+import { Utils } from './utils.js';
+
 class ErrorReporter {
   /**
    * @param {Object} config - конфігурація репортера
@@ -33,21 +36,41 @@ class ErrorReporter {
    * @param {string} [data.url] - URL сторінки
    */
   capture(data) {
-    this.queue.push({
+    this.queue.push(this.#normalize(data));
+
+    if (this.queue.length > this.maxQueue) {
+      this.queue.shift();
+    }
+  }
+
+  /**
+   * Приводить дані до формату полів форми. Діалог звіту передає активного
+   * провайдера як `provider`, а поле форми називається `mode`: без цього
+   * відповідності провайдер завжди губився.
+   */
+  #normalize(data) {
+    return {
       error: data.error || "",
       stack: data.stack || "",
-      mode: data.mode || "",
+      mode: data.mode || data.provider || "",
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       language: navigator.language,
       screen: `${screen.width}x${screen.height}`,
       version: chrome.runtime.getManifest().version,
       appId: this.appId
-    });
+    };
+  }
 
-    if (this.queue.length > this.maxQueue) {
-      this.queue.shift();
-    }
+  /**
+   * Негайно відправляє звіт і чекає результат. На відміну від capture()+flush()
+   * не мовчить при збої або спрацюванні rate-limit, а кидає помилку, щоб UI
+   * не показував «Надіслано» для звіту, який нікуди не пішов.
+   * @param {Object} data
+   * @returns {Promise<void>}
+   */
+  async submit(data) {
+    await this.send(this.#normalize(data));
   }
 
   /**
@@ -90,11 +113,13 @@ class ErrorReporter {
 
     formData.append("entry.APP_ID", this.appId);
 
-    await fetch(this.endpoint, {
-      method: "POST",
-      mode: "no-cors",
-      body: formData
-    });
+    // no-cors повертає непрозору відповідь, тож перевірити статус неможливо;
+    // але мережеві збої та тайм-аут тут усе одно кинуть помилку.
+    await Utils.fetchWithTimeout(
+      this.endpoint,
+      { method: "POST", mode: "no-cors", body: formData },
+      CONSTANTS.FETCH_TIMEOUT_MS
+    );
   }
 
 
