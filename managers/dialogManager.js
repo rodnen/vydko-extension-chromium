@@ -126,14 +126,17 @@ export class DialogManager {
   }
 
   async #handleClearCache(cacheBtn) {
-    const { success, removed } = await Utils.sendMessage({ action: 'clearAllCache' });
-    if (!success) return;
+    const result = await Utils.sendMessage({ action: 'clearAllCache' });
+    if (!result?.success) return;
+
+    // Перечитуємо appCache, щоб прибрати з пам'яті popup щойно очищені дані.
+    await this.cacheManager?.load?.();
 
     const cache = await Utils.getStorageSize();
     cacheBtn.querySelector('.cache-info').innerText = this.i18n.formatBytes(cache.bytes);
 
     MessageManager.toast({
-      text: `${this.i18n.get('dialogCacheCleared')} (${removed})`,
+      text: `${this.i18n.get('dialogCacheCleared')} (${result.removed ?? 0})`,
       type: 'success',
       icon: 'ic_check'
     });
@@ -407,7 +410,7 @@ export class DialogManager {
           };
 
           const sendingToastId = MessageManager.toast({
-            text: his.i18n.get('dialogBugSending'),
+            text: this.i18n.get('dialogBugSending'),
             type: 'info',
             icon: 'ic_info',
             duration: 10000
