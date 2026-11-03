@@ -42,9 +42,9 @@ class Utils {
 
   /* ---------- утиліти часу ---------- */
   static minutesToTime(min) {
-    if (min === 1440) return '24:00';
-    const h = Math.floor(min / 60);
+    const h = Math.floor((min % 1440) / 60);
     const m = min % 60;
+
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
