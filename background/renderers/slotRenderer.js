@@ -2,6 +2,7 @@ import { Utils } from '../../utils/utils.js';
 
 export function buildSlotHTML({
   i18n,
+  index,
   turn = null,
   start,
   end,
@@ -15,15 +16,16 @@ export function buildSlotHTML({
   // `turn` походить із ключів відповіді API (черги/групи), а start/end — із
   // слотів. Усе це недовірені дані, які потрапляють у innerHTML popup.
   const safeTurn = turn === null ? null : Utils.escapeHTML(turn);
+  const safeIndex = Number.isInteger(index) ? index : 0;
   const startMinutes = Number(start);
   const endMinutes = Number(end);
   if (!Number.isFinite(startMinutes) || !Number.isFinite(endMinutes)) return '';
 
   return `
-    <div class="_table_element flex-between glass-panel glass-blur${isOutage ? ' outage' : ''}${isNow ? ' selected' : ''}" data-index="${safeTurn}">
+    <div class="_table_element flex-between glass-panel glass-blur${isOutage ? ' outage' : ''}${isNow ? ' selected' : ''}" ${safeTurn ? ` data-queue="${safeTurn}"` : ''}>
       <div style="flex: 1;">
         <div class="_outage_time g-5">
-          ${isNow ? '<div class="_table_current_selected"></div>' : ''}
+          ${isNow ? `<div class="_table_current_selected" data-index="${safeIndex}"></div>` : ''}
           <span>${Utils.minutesToTime(startMinutes)} - ${Utils.minutesToTime(endMinutes)}</span>
         </div>
         <div class="_outage_type" data-i18n="${statusKey}">

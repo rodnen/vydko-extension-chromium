@@ -64,9 +64,10 @@ export function renderYasnoTable(
 
     if (slots.length) hasAnySlots = true;
 
-    for (const slot of slots) {
+    for (const [index, slot] of slots.entries()) {
       const row = buildSlotHTML({
         i18n,
+        index,
         turn: group === 'all' ? currentGroup : null,
         start: slot.start,
         end: slot.end,

@@ -139,8 +139,9 @@ export function renderDtekTable(factData, group, dayType, i18n) {
 
     const slots = mergeSlots(buildHalfHourSlots(dayData[currentGroup]));
 
-    return slots.map(slot => buildSlotHTML({
+    return slots.map((slot, index) => buildSlotHTML({
       i18n,
+      index,
       turn: group === 'all' ? currentGroup.replace('GPV', '') : null,
       start: slot.start,
       end: slot.end,
