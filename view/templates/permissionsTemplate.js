@@ -1,7 +1,7 @@
 const PERMISSIONS = {
   cookies: ['ic_cookie', 'permissionCookies'],
   storage: ['ic_database', 'permissionStorage'],
-  unlimitedStorage: ['ic_database', 'permissionUnlimitedStorage'],
+  unlimitedStorage: ['ic_unlim_database', 'permissionUnlimitedStorage'],
   tabs: ['ic_tabs', 'permissionTabs'],
   activeTab: ['ic_tab', 'permissionActiveTab'],
   scripting: ['ic_code', 'permissionScripting'],
