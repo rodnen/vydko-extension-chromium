@@ -32,7 +32,7 @@ export class ScheduleService {
     }
 
     const cacheParts = {
-      renderVersion: 2,
+      renderVersion: 3,
       group,
       regionId,
       dsoId,
@@ -81,7 +81,7 @@ export class ScheduleService {
 
     try {
       const cacheParts = [
-        'table-v3',
+        'table-v4',
         `dtek-${type}`,
         type,
         group,

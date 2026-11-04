@@ -109,16 +109,30 @@ export class NotificationScheduler {
   }
 
   /**
+   * Приводить значення з розкладу до timestamp у мілісекундах.
+   * Після кешування в chrome.storage Date-об'єкти стають ISO-рядками,
+   * тому Number(рядок) дає NaN — такі дати треба розбирати окремо.
+   */
+  static #toTimestamp(value) {
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed : NaN;
+    }
+    return Number(value);
+  }
+
+  /**
    * Зберігає новий розклад відключень і одразу перевіряє,
    * чи не треба сповістити негайно (напр. якщо найближча подія вже дуже скоро).
    */
   static async saveOutageSchedule(outageDates, i18n) {
     if (!outageDates) return;
 
-    const timestamps = [...new Set(
-      outageDates.map(d => (d instanceof Date ? d.getTime() : Number(d)))
-    )]
-      .filter(ts => ts > Date.now())
+    const now = Date.now();
+    const timestamps = [...new Set(outageDates.map(value => this.#toTimestamp(value)))]
+      .filter(ts => Number.isFinite(ts) && ts > now)
       .sort((a, b) => a - b);
 
     await Utils.setStorageData({

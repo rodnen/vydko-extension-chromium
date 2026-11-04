@@ -156,8 +156,7 @@ export class BoxView {
   scrollToSelected(selector = '._table_current_selected', minIndex = 4) {
     const el = this.#box.querySelector(selector);
     const index = el?.dataset.index !== undefined ? Number(el.dataset.index) : null;
-    console.log(el);
-    console.log(index);
+
     if (el && index !== null && index >= minIndex) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {

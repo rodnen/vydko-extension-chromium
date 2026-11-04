@@ -1,6 +1,7 @@
 import { Utils } from '../../utils/utils.js';
 import { buildSlotHTML } from './slotRenderer.js';
 import { compareGroups } from './groupUtils.js';
+import { collectFutureStarts } from './outageIntervals.js';
 
 const STATUS_MAP = {
   yes: ['power', 'power'],
@@ -71,8 +72,6 @@ function parseFact(factData, i18n) {
   const today = Number(fact.today);
   const lookup = key => fact.data?.[key] ?? fact[key];
 
-  // «Завтра» — це наступний ключ дня. Зазвичай today + 24 год, але на межі
-  // зміни часу різниця 23/25 год, тому шукаємо ключ із допуском.
   const exact = today + DAY_SECONDS;
   const tomorrow = lookup(exact)
     ? exact
@@ -83,18 +82,40 @@ function parseFact(factData, i18n) {
   return { today, tomorrow, lookup };
 }
 
-/** Майбутні початки відключень для одного дня (для планувальника сповіщень). */
-function collectOutageDates(dayData, group, baseTimestamp, now) {
-  if (!dayData || typeof dayData !== 'object') return [];
+function collectOutageDates(days, group, now) {
+  const groupNames = new Set();
 
-  return getGroupNames(dayData, group).flatMap(groupName => {
-    if (!dayData[groupName]) return [];
+  for (const { dayData } of days) {
+    if (!dayData || typeof dayData !== 'object') continue;
 
-    return mergeSlots(buildHalfHourSlots(dayData[groupName]))
-      .filter(slot => slot.status === 'outage')
-      .map(slot => Utils.minutesToDate(baseTimestamp, slot.start))
-      .filter(date => date > now);
-  });
+    for (const groupName of getGroupNames(dayData, group)) {
+      if (dayData[groupName]) groupNames.add(groupName);
+    }
+  }
+
+  const nowTimestamp = now.getTime();
+  const starts = [];
+
+  for (const groupName of groupNames) {
+    const intervals = [];
+
+    for (const { dayData, baseTimestamp } of days) {
+      if (!dayData?.[groupName]) continue;
+
+      mergeSlots(buildHalfHourSlots(dayData[groupName]))
+        .filter(slot => slot.status === 'outage')
+        .forEach(slot => {
+          intervals.push({
+            start: Utils.minutesToDate(baseTimestamp, slot.start).getTime(),
+            end: Utils.minutesToDate(baseTimestamp, slot.end).getTime()
+          });
+        });
+    }
+
+    starts.push(...collectFutureStarts(intervals, nowTimestamp));
+  }
+
+  return starts;
 }
 
 export function renderDtekTable(factData, group, dayType, i18n) {
@@ -105,12 +126,14 @@ export function renderDtekTable(factData, group, dayType, i18n) {
   const { today: todayTimestamp, tomorrow: tomorrowTimestamp, lookup } = parseFact(factData, i18n);
   const now = new Date();
 
-  // Сповіщення потребують обох днів незалежно від того, яку вкладку
-  // відкрито, інакше перегляд «завтра» стирав би сьогоднішні відключення.
-  const outageDates = [
-    ...collectOutageDates(lookup(todayTimestamp), group, todayTimestamp, now),
-    ...collectOutageDates(lookup(tomorrowTimestamp), group, tomorrowTimestamp, now)
-  ].sort((a, b) => a - b);
+  const outageDates = collectOutageDates(
+    [
+      { dayData: lookup(todayTimestamp), baseTimestamp: todayTimestamp },
+      { dayData: lookup(tomorrowTimestamp), baseTimestamp: tomorrowTimestamp }
+    ],
+    group,
+    now
+  ).sort((a, b) => a - b);
 
   const key = dayType === 'today' ? todayTimestamp : tomorrowTimestamp;
   const dayData = lookup(key);
@@ -151,8 +174,6 @@ export function renderDtekTable(factData, group, dayType, i18n) {
     })).filter(Boolean).join('');
   }).join('');
 
-  // Порожній екран без пояснення гірший за статус «очікуємо оновлення»:
-  // для вибраної черги графіка може просто не бути.
   const status = isSingleNoOutageGroup ? 'ok' : (html ? null : 'info');
 
   return { html, status, outageDates };

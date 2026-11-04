@@ -1,6 +1,7 @@
 
 import { buildSlotHTML } from './slotRenderer.js';
 import { compareGroups } from './groupUtils.js';
+import { collectFutureStarts } from './outageIntervals.js';
 
 function slotMinutesToTimestamp(isoDateString, minutes) {
   const date = new Date(isoDateString);
@@ -79,17 +80,25 @@ export function renderYasnoTable(
       if (row) rows.push(row);
     }
 
+    const intervals = [];
+
     for (const type of ['today', 'tomorrow']) {
       const schedule = schedules?.[type];
       if (!schedule?.date) continue;
 
+      const dayStart = slotMinutesToTimestamp(schedule.date, 0);
+
       for (const slot of schedule.slots || []) {
         if (slot.type !== 'Definite') continue;
 
-        const timestamp = slotMinutesToTimestamp(schedule.date, slot.start);
-        if (timestamp > now) outageDates.push(timestamp);
+        intervals.push({
+          start: dayStart + slot.start * 60000,
+          end: dayStart + slot.end * 60000
+        });
       }
     }
+
+    outageDates.push(...collectFutureStarts(intervals, now.getTime()));
   }
 
   const status = isEmergency
