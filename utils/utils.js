@@ -293,7 +293,17 @@ class Utils {
       return null;
     }
 
-    const match = str.trim().match(
+    const value = str.trim();
+
+    // Деякі API вже віддають готовий ISO 8601 (напр. Yasno:
+    // "2026-11-11T14:21:24+00:00"). Такий час не можна трактувати
+    // як локальний — лише нормалізуємо його.
+    if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+    }
+
+    const match = value.match(
       /^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})$/
     );
 
@@ -303,27 +313,27 @@ class Utils {
 
     const [, day, month, year, hours, minutes] = match;
 
+    // DTEK віддає час оновлення у локальному часі (саме так він
+    // відображається на сайті), тому створюємо Date в локальній зоні.
     const date = new Date(
-      Date.UTC(
-        Number(year),
-        Number(month) - 1,
-        Number(day),
-        Number(hours),
-        Number(minutes)
-      )
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hours),
+      Number(minutes)
     );
 
     if (
-      date.getUTCFullYear() !== Number(year) ||
-      date.getUTCMonth() !== Number(month) - 1 ||
-      date.getUTCDate() !== Number(day) ||
-      date.getUTCHours() !== Number(hours) ||
-      date.getUTCMinutes() !== Number(minutes)
+      date.getFullYear() !== Number(year) ||
+      date.getMonth() !== Number(month) - 1 ||
+      date.getDate() !== Number(day) ||
+      date.getHours() !== Number(hours) ||
+      date.getMinutes() !== Number(minutes)
     ) {
       return null;
     }
 
-    return `${year}-${month}-${day}T${hours}:${minutes}:00+00:00`;
+    return date.toISOString();
   }
 
   static semverCompare(a, b) {

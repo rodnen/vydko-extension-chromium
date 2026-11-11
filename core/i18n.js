@@ -218,12 +218,15 @@ export class I18n {
     if (!updatedOn) return null;
 
     const date = new Date(updatedOn);
+    if (Number.isNaN(date.getTime())) return null;
+
     const now = new Date();
 
+    // Час показуємо в локальній зоні користувача: API може віддавати
+    // updatedOn в UTC (Yasno: ...+00:00), але на сайті час локальний.
     const time = date.toLocaleTimeString(this.#locale, {
       hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'UTC'
+      minute: '2-digit'
     });
 
     const isSameDay = (a, b) =>

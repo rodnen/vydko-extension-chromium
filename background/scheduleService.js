@@ -81,7 +81,7 @@ export class ScheduleService {
 
     try {
       const cacheParts = [
-        'table-v4',
+        'table-v5',
         `dtek-${type}`,
         type,
         group,
