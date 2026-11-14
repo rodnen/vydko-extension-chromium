@@ -5,9 +5,9 @@ import { ThemeView } from '../view/themeView.js';
 import { ProviderView } from '../view/providerView.js';
 import { getUpdateStateMeta } from '../utils/updateState.js';
 // ============================================================================
-// МЕНЕДЖЕР POPUP-МЕНЮ
+// МЕНЕДЖЕР POPUP-МЕНЮ (головне меню + вибір мови)
 // ============================================================================
-export class MainPopupManager {
+export class PopupMenuManager {
   #themeView = null;
   #providerView = null;
 
@@ -28,16 +28,64 @@ export class MainPopupManager {
     this.#providerView.init();
   }
 
-  #closePopups = (currentPopup) => {
+  // --------------------------------------------------------------------------
+  // Спільна логіка відкриття/закриття меню
+  // --------------------------------------------------------------------------
+
+  #close(button, menu) {
+    button?.classList.remove('primal');
+    menu?.classList.remove('active');
+  }
+
+  #closeOthers(currentMenu) {
     document.querySelectorAll('.popup-menu.active')
       .forEach(menu => {
-        if (menu !== currentPopup) {
-          menu.classList.remove('active');
-        }
+        if (menu === currentMenu) return;
+
+        this.#close(menu.closest('.app-menu')?.querySelector('.app-btn'), menu);
       });
-  };
+  }
+
+  /**
+   * Підключає кнопку + випадне меню.
+   * @param {Object} options
+   * @param {HTMLElement} options.button - кнопка, що відкриває меню
+   * @param {HTMLElement} options.menu - саме меню
+   * @param {string} options.itemSelector - селектор елемента, на який реагуємо при кліку
+   * @param {(item: HTMLElement) => void} options.onItemClick - обробник вибраного пункту
+   */
+  #bindMenu({ button, menu, itemSelector, onItemClick }) {
+    if (!button || !menu) return;
+
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.#closeOthers(menu);
+      button.classList.toggle('primal');
+      menu.classList.toggle('active');
+    });
+
+    document.addEventListener('click', () => this.#close(button, menu));
+
+    menu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const item = e.target.closest(itemSelector);
+      if (!item) return;
+
+      onItemClick(item);
+      if (item.classList.contains('close-at-click')) this.#close(button, menu);
+    });
+  }
 
   async init() {
+    this.#initMainMenu();
+    this.#initLanguageMenu();
+  }
+
+  // --------------------------------------------------------------------------
+  // Головне меню
+  // --------------------------------------------------------------------------
+
+  #initMainMenu() {
     const { dotsBtn, mainPopupMenu } = this.dom;
     if (!dotsBtn || !mainPopupMenu) return;
 
@@ -45,21 +93,11 @@ export class MainPopupManager {
     const checkbox = mainPopupMenu.querySelector('#checkbox-mode');
     if (checkbox) checkbox.checked = provider === CONSTANTS.PROVIDER.DTEK;
 
-    dotsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.#closePopups(mainPopupMenu);
-      mainPopupMenu.classList.toggle('active');
-    });
-
-    document.addEventListener('click', () => mainPopupMenu.classList.remove('active'));
-
-    mainPopupMenu.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const item = e.target.closest('[data-action]');
-      if (!item) return;
-
-      this.handleMenuAction(item);
-      if (item.classList.contains('close-at-click')) mainPopupMenu.classList.remove('active');
+    this.#bindMenu({
+      button: dotsBtn,
+      menu: mainPopupMenu,
+      itemSelector: '[data-action]',
+      onItemClick: (item) => this.#handleMenuAction(item)
     });
   }
 
@@ -79,7 +117,7 @@ export class MainPopupManager {
     });
   }
 
-  async handleMenuAction(item) {
+  async #handleMenuAction(item) {
     switch (item.dataset.action) {
       case 'provider': {
         try {
@@ -134,7 +172,7 @@ export class MainPopupManager {
         this.dialogManager.showBugReport((data) => this.errorReporter.submit(data));
         break;
 
-      case 'about':
+      case 'about': {
         const [cache, info, storage, installDate] = await Promise.all([
           Utils.getStorageSize(),
           chrome.management.getSelf(),
@@ -168,6 +206,7 @@ export class MainPopupManager {
           ...info,
         });
         break;
+      }
 
       case 'support':
         this.dialogManager.showSupport();
@@ -176,5 +215,35 @@ export class MainPopupManager {
       default:
         console.warn(`Unknown menu action: ${item.dataset.action}`);
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // Меню вибору мови
+  // --------------------------------------------------------------------------
+
+  #initLanguageMenu() {
+    const { languageBtn, languagePopupMenu } = this.dom;
+    if (!languageBtn || !languagePopupMenu) return;
+
+    const currentSelected = languagePopupMenu.querySelector(`.menu-item[data-value="${this.i18n.getLocale()}"]`);
+    currentSelected?.setAttribute('selected', '');
+
+    this.#bindMenu({
+      button: languageBtn,
+      menu: languagePopupMenu,
+      itemSelector: '[data-value]',
+      onItemClick: (item) => {
+        this.#setLanguage(item.dataset.value);
+
+        languagePopupMenu.querySelector('.menu-item[selected]')?.removeAttribute('selected');
+        item.setAttribute('selected', '');
+      }
+    });
+  }
+
+  async #setLanguage(locale) {
+    await this.i18n.setLocale(locale);
+
+    this.i18n.localize();
   }
 }

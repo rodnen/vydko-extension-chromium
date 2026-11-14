@@ -10,8 +10,7 @@ import { SelectManager } from './managers/selectManager.js';
 import { InputManager } from './managers/inputManager.js';
 import { DataManager } from './managers/dataManager.js';
 import { RefreshManager } from './managers/refreshManager.js';
-import { MainPopupManager } from './managers/mainPopupManager.js';
-import { LanguagePopupManager } from './managers/languagePopupManager.js';
+import { PopupMenuManager } from './managers/popupMenuManager.js';
 import { I18n } from './core/i18n.js';
 
 // ============================================================================
@@ -84,7 +83,7 @@ export class App {
       this.dataManager.loadData();
     }
 
-    this.mainPopupManager = new MainPopupManager(
+    this.popupMenuManager = new PopupMenuManager(
       dom,
       this.dialogManager,
       this.i18n,
@@ -92,10 +91,6 @@ export class App {
       onProviderChange
     );
 
-    this.languagePopupManager = new LanguagePopupManager(
-      dom,
-      this.i18n
-    );
     this.refreshManager = new RefreshManager(
       dom,
       this.cacheManager,
@@ -108,8 +103,7 @@ export class App {
     );
 
     this.selectManager.init();
-    this.mainPopupManager.init();
-    this.languagePopupManager.init();
+    this.popupMenuManager.init();
     this.notificationView.init();
 
     this.i18n.localize();
