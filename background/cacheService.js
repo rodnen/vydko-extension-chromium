@@ -92,8 +92,8 @@ export class BackgroundCacheService {
   }
 
   /**
-   * Прибирає з appCache лише кешовані адресні дані (списки будинків і дані
-   * будинку), зберігаючи вибраний ОСР, чергу та адресу користувача.
+   * Прибирає з appCache кешовані адресні дані та список груп, зберігаючи
+   * вибраний ОСР, чергу та адресу користувача.
    * @param {string} raw
    * @returns {string|null} оновлений JSON або null, якщо його неможливо розібрати
    */
@@ -101,6 +101,9 @@ export class BackgroundCacheService {
     try {
       const cache = JSON.parse(raw);
       if (!cache || typeof cache !== 'object') return null;
+
+      // Список груп — це теж кеш, тож при повному очищенні його скидаємо.
+      delete cache.groups;
 
       for (const provider of Object.values(cache)) {
         const byDso = provider?.byDso;

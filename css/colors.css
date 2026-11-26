@@ -27,7 +27,7 @@
 
     /* ---------- Скло — бліки та межі ---------- */
     --glass-border: rgba(220, 220, 220, 0.7);
-    --glass-border-subtle: rgba(255, 255, 255, 0.7);
+    --glass-border-subtle: rgba(150, 150, 150, 0.5);
     --glass-highlight: rgba(255, 255, 255, 0.85);
     --glass-shadow: rgba(0, 0, 0, 0.25);
     --glass-inset: rgba(255, 255, 255, 0.6);
@@ -247,7 +247,7 @@
     --slider-bg: rgba(210, 210, 210, 1);
 
     --glass-border: rgba(220, 220, 220, 0.7);
-    --glass-border-subtle: rgba(255, 255, 255, 0.7);
+    --glass-border-subtle: rgba(150, 150, 150, 0.5);
     --glass-highlight: rgba(255, 255, 255, 0.85);
     --glass-shadow: rgba(0, 0, 0, 0.25);
     --glass-inset: rgba(255, 255, 255, 0.6);

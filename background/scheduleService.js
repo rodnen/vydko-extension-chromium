@@ -5,6 +5,7 @@ import { AddressService } from './addressService.js';
 import { serializeError } from './errorUtils.js';
 import { renderYasnoTable } from './renderers/yasnoRenderer.js';
 import { renderDtekTable } from './renderers/dtekRenderer.js';
+import { extractYasnoGroups, extractDtekGroups } from './renderers/groupUtils.js';
 import { YasnoAddressApi } from '../services/api/yasnoAddressApi.js';
 
 export class ScheduleService {
@@ -32,7 +33,7 @@ export class ScheduleService {
     }
 
     const cacheParts = {
-      renderVersion: 3,
+      renderVersion: 4,
       group,
       regionId,
       dsoId,
@@ -48,9 +49,12 @@ export class ScheduleService {
       if (secondCheck) return secondCheck;
 
       try {
-        const api = new YasnoAddressApi({ regionId, dsoId }, this.i18n);
-        const data = await api.getPlannedOutages();
-        const result = renderYasnoTable(data, group, currentDayNumber, dayType, this.i18n);
+        const data = await this.#fetchYasnoRaw(regionId, dsoId);
+        const result = {
+          ...renderYasnoTable(data, group, currentDayNumber, dayType, this.i18n),
+          groups: extractYasnoGroups(data),
+          dsoKey: Utils.DSOID_TO_DTEK_TYPE[dsoId] ?? 'none'
+        };
 
         await this.cache.set(cacheParts, result);
         return result;
@@ -81,7 +85,7 @@ export class ScheduleService {
 
     try {
       const cacheParts = [
-        'table-v5',
+        'table-v6',
         `dtek-${type}`,
         type,
         group,
@@ -108,7 +112,9 @@ export class ScheduleService {
           html: rendered.html,
           status: rendered.status,
           outageDates: rendered.outageDates,
-          updatedOn: Utils.toIso(rawData.data?.update)
+          updatedOn: Utils.toIso(rawData.data?.update),
+          groups: extractDtekGroups(rawData),
+          dsoKey: type
         };
 
         await this.cache.set(cacheParts, result);
@@ -129,6 +135,43 @@ export class ScheduleService {
       `dtek-raw:${type}`,
       () => this.address.fetchDtekDefaultData(type)
     );
+  }
+
+  /** Сирі дані Yasno для регіону/ОСР — спільні для таблиці й списку груп. */
+  #fetchYasnoRaw(regionId, dsoId) {
+    return this.cache.getOrCreateRequest(
+      JSON.stringify(['yasno-raw', regionId, dsoId]),
+      () => new YasnoAddressApi({ regionId, dsoId }, this.i18n).getPlannedOutages()
+    );
+  }
+
+  /** Динамічний список груп Yasno для регіону/ОСР. */
+  async getYasnoGroups(regionId, dsoId) {
+    if (Utils.isInvalidValue(regionId, dsoId)) return [];
+
+    const data = await this.#fetchYasnoRaw(regionId, dsoId);
+    return extractYasnoGroups(data);
+  }
+
+  /** Динамічний список груп DTEK для типу (dnem / kem). */
+  async getDtekGroups(type) {
+    if (!Utils.isDtekApiType(type)) return [];
+
+    const rawData = await this.#fetchDtekRaw(type);
+    return extractDtekGroups(rawData);
+  }
+
+  /**
+   * Повертає актуальний список груп для селекта разом із ключем ОСР,
+   * під яким його треба закешувати (dnem / kem / cek).
+   */
+  async getGroups({ provider, regionId, dsoId, type }) {
+    if (provider === CONSTANTS.PROVIDER.YASNO) {
+      const dsoKey = Utils.DSOID_TO_DTEK_TYPE[dsoId] ?? 'none';
+      return { dsoKey, groups: await this.getYasnoGroups(regionId, dsoId) };
+    }
+
+    return { dsoKey: type, groups: await this.getDtekGroups(type) };
   }
 
   async saveScheduleAndReturn(result) {

@@ -3,6 +3,7 @@ import { Utils } from '../utils/utils.js';
 
 // Структура сховища (chrome.storage.local → ключ 'appCache'):
 // {
+//   groups: { dnem: [...], kem: [...], cek: [...] },
 //   yasno: {
 //     select:    { group, dsoId, regionId },
 //     byDso: {
@@ -102,6 +103,25 @@ export class CacheManager {
   setSelect(provider = this.#activeProvider, patch) {
     const providerObj = this.#providerObj(provider);
     providerObj.select = { ...(providerObj.select ?? {}), ...patch };
+    this.#scheduleSave();
+  }
+
+  // ── Номери груп за ОСР/регіоном (dnem / kem / cek) ─────────────────────
+  // Записуються один раз при першому отриманні, далі лише порівнюються
+  // зі свіжими даними розкладу (див. SelectManager.updateGroups).
+  getGroups(dsoKey) {
+    const groups = this.#mem.groups?.[dsoKey];
+    return Array.isArray(groups) ? groups : null;
+  }
+
+  setGroups(dsoKey, groups) {
+    if (!dsoKey || dsoKey === 'none' || !Array.isArray(groups)) return;
+
+    if (!this.#mem.groups || typeof this.#mem.groups !== 'object') {
+      this.#mem.groups = {};
+    }
+
+    this.#mem.groups[dsoKey] = [...groups];
     this.#scheduleSave();
   }
 

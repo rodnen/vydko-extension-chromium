@@ -111,13 +111,22 @@ export class DataManager {
 
     try {
       const response = await chrome.runtime.sendMessage(payload);
-      const { success, html, status, updatedOn, error } = response;
-      this.#updatedOn = updatedOn;
+      const { success, html, status, updatedOn, error, groups, dsoKey } = response;
 
       if (!success) {
+        this.#updatedOn = updatedOn;
         this.#box.showError(error);
         return;
       }
+
+      // Список груп приходить разом із розкладом — порівнюємо його з кешем
+      // без окремого запиту. Якщо вибрана група зникла/з'явилась,
+      // updateGroups сам ініціює повторне завантаження.
+      if (groups?.length && this.selectManager.updateGroups(dsoKey, groups)) {
+        return;
+      }
+
+      this.#updatedOn = updatedOn;
 
       const statusHTML = status
         ? Utils.buildStatusIndicatorHTML(this.i18n, status)

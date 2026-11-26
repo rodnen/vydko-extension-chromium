@@ -79,7 +79,7 @@ export class App {
     const onProviderChange = async (provider) => {
       await Utils.sendMessage({ action: 'clearTableCache' });
       await this.cacheManager.setActiveProvider(provider);
-      this.selectManager.setProvider(provider);
+      await this.selectManager.setProvider(provider);
       this.dataManager.loadData();
     }
 
@@ -102,10 +102,15 @@ export class App {
       }
     );
 
-    this.selectManager.init();
+    this.i18n.localize();
+
+    try {
+      await this.selectManager.init();
+    } catch (error) {
+      console.error('[App] selectManager init failed:', error);
+    }
+
     this.popupMenuManager.init();
     this.notificationView.init();
-
-    this.i18n.localize();
   }
 }

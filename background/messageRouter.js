@@ -37,6 +37,10 @@ export class MessageRouter {
         .buildDtekTable(message.type, message.group, message.dayType)
         .then(result => this.scheduleService.saveScheduleAndReturn(result)),
 
+      fetchGroups: () => this.scheduleService
+        .getGroups(message)
+        .then(result => ({ success: true, ...result })),
+
       fetchCity: () => this.addressService.getCities(message.params),
       fetchStreet: () => this.addressService.getStreets(message.type, message.params),
       fetchHouses: () => this.addressService.getHouses(message.type, message.params),

@@ -1,18 +1,14 @@
 import { CONSTANTS } from '../config/constants.js';
+import { Utils } from '../utils/utils.js';
 // ============================================================================
 // МЕНЕДЖЕР СЕЛЕКТІВ
 // Читає/пише значення через CacheManager (один об'єкт в пам'яті)
 // ============================================================================
 
-const QUEUE_PATTERNS = {
-  3: { groups: 6, subs: 2 },
-  25: { groups: 60, subs: 1 }
-};
-
-
 export class SelectManager {
-  #currentRegion = null;
+  #currentDsoId = null;
   #currentProvider = null;
+  #groupRequests = new Map();
 
   constructor(dom, i18n, cache, onSelectionChange) {
     this.dom = dom;
@@ -36,7 +32,7 @@ export class SelectManager {
     this.#currentProvider = this.cache.getActiveProvider();
 
     this.#regenerateDsoOptions(this.#currentProvider, false);
-    this.loadSavedValues();
+    await this.loadSavedValues();
   }
 
   async setProvider(provider) {
@@ -48,10 +44,10 @@ export class SelectManager {
     if (provider === this.#currentProvider) return;
 
     this.#currentProvider = provider;
-    this.#currentRegion = null;
+    this.#currentDsoId = null;
 
     this.#regenerateDsoOptions(provider, false);
-    this.loadSavedValues();
+    await this.loadSavedValues();
   }
 
   handleOutsideClick(e) {
@@ -85,12 +81,11 @@ export class SelectManager {
         if (type === 'dsoId') patch.regionId = option.dataset.region;
         this.cache.setSelect(this.#currentProvider, patch);
 
-        if (type === 'dsoId') {
-          this.#handleRegionChange(option.dataset.region);
-        }
+        element.classList.remove('open');
+
+        if (type === 'dsoId') this.#handleDsoChange(option.dataset.value);
 
         this.onSelectionChange?.(type);
-        element.classList.remove('open');
       } else {
         e.stopPropagation();
         this.selects.forEach(({ element: other }) => {
@@ -140,30 +135,70 @@ export class SelectManager {
     this.setSelectValue(dsoSelect, 'dsoId', CONSTANTS.DEFAULT_DSO_ID, CONSTANTS.DEFAULT_DSO_ID);
     this.cache.setSelect(provider, { dsoId: CONSTANTS.DEFAULT_DSO_ID, region: dsoSelect.dataset.region });
 
-    this.#handleRegionChange(dsoSelect.dataset.region, resetValue);
+    this.#currentDsoId = null;
+    this.#handleDsoChange(CONSTANTS.DEFAULT_DSO_ID, resetValue);
   }
 
+  // ОСР визначає набір груп (dnem / kem / cek), тому реагуємо саме на зміну
+  // dsoId, а не regionId: у 301 і 303 regionId однаковий (3), а групи різні.
+  #handleDsoChange(dsoId, resetValue = true) {
+    if (dsoId === this.#currentDsoId) return;
 
-  #handleRegionChange(region, resetValue = true) {
-    if (region === this.#currentRegion) return;
-    this.#currentRegion = region;
-    this.#regenerateQueueOptions(region, resetValue);
+    this.#currentDsoId = dsoId;
+    this.#regenerateQueueOptions(dsoId, resetValue);
   }
 
-  #generateQueueValues(region) {
-    const pattern = QUEUE_PATTERNS[region];
-    if (!pattern) return [];
-
-    const values = [];
-    for (let g = 1; g <= pattern.groups; g++) {
-      for (let s = 1; s <= pattern.subs; s++) {
-        values.push(`${g}.${s}`);
-      }
-    }
-    return values;
+  #getDsoKey(dsoId) {
+    return Utils.DSOID_TO_DTEK_TYPE[dsoId] ?? 'none';
   }
 
-  #buildQueueOptionsFragment(region) {
+  // ---- ЧЕРГИ (queue) -------------------------------------------------
+
+  /**
+   * Повертає закешовані групи для ОСР. Якщо кешу немає — робить один
+   * мережевий запит через background і записує результат у кеш.
+   */
+  async #ensureGroups(dsoId) {
+    const dsoKey = this.#getDsoKey(dsoId);
+    if (!dsoKey || dsoKey === 'none') return [];
+
+    const cached = this.cache.getGroups(dsoKey);
+    if (cached?.length) return cached;
+
+    const requestKey = `${this.#currentProvider}:${dsoKey}`;
+    const pending = this.#groupRequests.get(requestKey);
+    if (pending) return pending;
+
+    const provider = this.#currentProvider;
+    const regionId = this.dom.dsoSelect?.dataset.region;
+    const payload = provider === CONSTANTS.PROVIDER.YASNO
+      ? { action: 'fetchGroups', provider, regionId, dsoId }
+      : { action: 'fetchGroups', provider, type: dsoKey };
+
+    const request = Utils.sendMessage(payload)
+      .then(response => {
+        if (!response?.success) {
+          console.error('[SelectManager] group fetch failed:', response?.error);
+          return [];
+        }
+
+        const groups = Array.isArray(response.groups) ? response.groups : [];
+        if (groups.length) this.cache.setGroups(dsoKey, groups);
+        return groups;
+      })
+      .catch(error => {
+        console.error('[SelectManager] group fetch failed:', error);
+        return [];
+      })
+      .finally(() => {
+        this.#groupRequests.delete(requestKey);
+      });
+
+    this.#groupRequests.set(requestKey, request);
+    return request;
+  }
+
+  #buildQueueOptionsFragment(dsoKey) {
     const fragment = document.createDocumentFragment();
 
     const allOption = document.createElement('div');
@@ -173,7 +208,7 @@ export class SelectManager {
     allOption.textContent = this.i18n.get('all');
     fragment.appendChild(allOption);
 
-    for (const value of this.#generateQueueValues(region)) {
+    for (const value of this.cache.getGroups(dsoKey) ?? []) {
       const opt = document.createElement('div');
       opt.className = 'option';
       opt.dataset.value = value;
@@ -184,17 +219,132 @@ export class SelectManager {
     return fragment;
   }
 
-  #regenerateQueueOptions(region, resetValue = true) {
+  #renderQueueOptions(dsoKey) {
+    const optionsContainer = this.dom.queueSelect?.querySelector('.select-options');
+    if (!optionsContainer) return false;
+
+    optionsContainer.replaceChildren(this.#buildQueueOptionsFragment(dsoKey));
+    return true;
+  }
+
+  // Група з даних будинку може бути відсутня в закешованому списку
+  // (наприклад, якщо список груп ще не встиг оновитися). Додаємо її,
+  // щоб вибір будинку не «губився».
+  #ensureQueueOption(value) {
+    const optionsContainer = this.dom.queueSelect?.querySelector('.select-options');
+    if (!optionsContainer || !value) return;
+
+    if (optionsContainer.querySelector(`.option[data-value="${value}"]`)) return;
+
+    const opt = document.createElement('div');
+    opt.className = 'option';
+    opt.dataset.value = value;
+    opt.textContent = value;
+    optionsContainer.appendChild(opt);
+  }
+
+  #regenerateQueueOptions(dsoId, resetValue = true) {
+    if (!this.dom.queueSelect) return;
+
+    const dsoKey = this.#getDsoKey(dsoId);
+    const cachedGroups = this.cache.getGroups(dsoKey) ?? [];
+
+    // Одразу прибираємо варіанти попереднього ОСР, навіть якщо груп
+    // для нового ще немає в кеші.
+    if (!this.#renderQueueOptions(dsoKey)) return;
+
+    const saved = this.cache.getSelect(this.#currentProvider).group;
+
+    // Поки список груп невідомий, довіряємо збереженій групі, щоб одразу
+    // завантажити правильний розклад. Щойно API поверне список, він
+    // перевіряється і, за потреби, виправляється у #loadGroups.
+    const initialValue = !resetValue
+      && dsoKey !== 'none'
+      && saved
+      && (!cachedGroups.length || cachedGroups.includes(saved))
+      ? saved
+      : CONSTANTS.DEFAULT_QUEUE;
+
+    if (initialValue !== CONSTANTS.DEFAULT_QUEUE) this.#ensureQueueOption(initialValue);
+
+    this.setSelectValue(this.dom.queueSelect, 'queue', initialValue, CONSTANTS.DEFAULT_QUEUE);
+
+    if (resetValue) {
+      this.cache.setSelect(this.#currentProvider, { group: initialValue });
+    }
+
+    // Групи ще не закешовані (перший запуск або новий ОСР) — вантажимо
+    // у фоні, щоб не блокувати відкриття попапа на час мережевого запиту.
+    if (!cachedGroups.length) this.#loadGroups(dsoId);
+  }
+
+  /**
+   * Догружає групи у фоні та перебудовує селект, коли вони прийшли.
+   * На першому запуску список з'являється одразу після відповіді API,
+   * не затримуючи init() і перемикання режиму.
+   */
+  async #loadGroups(dsoId) {
+    const provider = this.#currentProvider;
+    const dsoKey = this.#getDsoKey(dsoId);
+    const groups = await this.#ensureGroups(dsoId);
+
+    // Поки чекали відповідь, користувач міг обрати інший ОСР або режим.
+    if (!groups.length || dsoId !== this.#currentDsoId || provider !== this.#currentProvider) return;
+
+    this.#renderQueueOptions(dsoKey);
+
     const queueSelect = this.dom.queueSelect;
-    const optionsContainer = queueSelect?.querySelector('.select-options');
-    if (!optionsContainer) return;
+    const current = queueSelect.dataset.value;
+    const saved = this.cache.getSelect(this.#currentProvider).group;
+    const value = groups.includes(current)
+      ? current
+      : (groups.includes(saved) ? saved : CONSTANTS.DEFAULT_QUEUE);
 
-    optionsContainer.replaceChildren(this.#buildQueueOptionsFragment(region));
+    this.setSelectValue(queueSelect, 'queue', value, CONSTANTS.DEFAULT_QUEUE);
 
-    if (!resetValue) return;
+    if (value === current) return;
 
-    this.setSelectValue(queueSelect, 'queue', CONSTANTS.DEFAULT_QUEUE, CONSTANTS.DEFAULT_QUEUE);
-    this.cache.setSelect(this.#currentProvider, { group: CONSTANTS.DEFAULT_QUEUE });
+    this.cache.setSelect(this.#currentProvider, { group: value });
+    this.onSelectionChange?.('queue');
+  }
+
+  /**
+   * Порівнює закешований список груп зі свіжим (він приходить разом із
+   * розкладом, без окремого запиту). Якщо набір змінився — оновлює кеш
+   * і перебудовує селект. Повертає true, якщо вибрану групу довелося
+   * змінити (тоді DataManager має перезавантажити таблицю).
+   */
+  updateGroups(dsoKey, groups) {
+    if (!dsoKey || dsoKey === 'none' || !Array.isArray(groups) || !groups.length) {
+      return false;
+    }
+
+    const cached = this.cache.getGroups(dsoKey) ?? [];
+    if (this.#sameGroups(cached, groups)) return false;
+
+    this.cache.setGroups(dsoKey, groups);
+
+    if (this.#getDsoKey(this.#currentDsoId) !== dsoKey) return false;
+    if (!this.#renderQueueOptions(dsoKey)) return false;
+
+    const queueSelect = this.dom.queueSelect;
+    const previous = queueSelect.dataset.value;
+    const saved = this.cache.getSelect(this.#currentProvider).group;
+    const value = groups.includes(previous)
+      ? previous
+      : (groups.includes(saved) ? saved : CONSTANTS.DEFAULT_QUEUE);
+
+    this.setSelectValue(queueSelect, 'queue', value, CONSTANTS.DEFAULT_QUEUE);
+
+    if (value === previous) return false;
+
+    this.cache.setSelect(this.#currentProvider, { group: value });
+    this.onSelectionChange?.('queue');
+    return true;
+  }
+
+  #sameGroups(a, b) {
+    return a.length === b.length && a.every((value, index) => value === b[index]);
   }
 
   setSelectValue(element, type, value, defaultValue) {
@@ -236,6 +386,18 @@ export class SelectManager {
     const select = this.selects.find(s => s.type === type);
     if (!select) return;
 
+    if (type === 'queue') {
+      const dsoKey = this.#getDsoKey(this.#currentDsoId);
+      const hasGroups = Boolean(this.cache.getGroups(dsoKey)?.length);
+
+      this.#renderQueueOptions(dsoKey);
+      this.#ensureQueueOption(value);
+
+      // Список груп ще не закешований — підвантажуємо його у фоні,
+      // не затримуючи застосування групи з даних будинку.
+      if (!hasGroups) this.#loadGroups(this.#currentDsoId);
+    }
+
     this.setSelectValue(select.element, select.type, value, select.defaultValue);
 
     const patch = { [select.cacheKey]: value };
@@ -245,7 +407,7 @@ export class SelectManager {
     this.onSelectionChange?.(type);
   }
 
-  loadSavedValues() {
+  async loadSavedValues() {
     const saved = this.cache.getSelect(this.#currentProvider);
     let dsoChanged = false;
 
@@ -257,7 +419,7 @@ export class SelectManager {
 
       this.setSelectValue(dsoSelect.element, dsoSelect.type, dsoIdValue, dsoSelect.defaultValue);
 
-      this.#handleRegionChange(dsoSelect.element.dataset.region, false);
+      this.#handleDsoChange(dsoIdValue, false);
       dsoChanged = true;
     }
 
@@ -265,7 +427,16 @@ export class SelectManager {
     if (queueSelect) {
       const savedQueue = saved.group;
       const exists = savedQueue && queueSelect.element?.querySelector(`.option[data-value="${savedQueue}"]`);
-      this.setSelectValue(queueSelect.element, queueSelect.type, exists ? savedQueue : queueSelect.defaultValue, queueSelect.defaultValue);
+      const queueValue = exists ? savedQueue : queueSelect.defaultValue;
+
+      this.setSelectValue(queueSelect.element, queueSelect.type, queueValue, queueSelect.defaultValue);
+
+      // Якщо групи вже відомі, а збереженої в них немає — виправляємо кеш.
+      // Поки груп немає, залишаємо збережене значення для наступної спроби.
+      const groups = this.cache.getGroups(this.#getDsoKey(this.#currentDsoId)) ?? [];
+      if (queueValue !== savedQueue && groups.length) {
+        this.cache.setSelect(this.#currentProvider, { group: queueValue });
+      }
     }
 
     this.onSelectionChange?.(dsoChanged ? 'dsoId' : 'queue');
